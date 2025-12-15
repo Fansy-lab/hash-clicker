@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useGameState } from "@/composables/useGameState";
 import { useSaveStore } from "@/stores/saveStore";
 import type { Upgrade } from "@/types/game";
@@ -31,6 +31,23 @@ const saveStore = useSaveStore();
 const gameReady = ref(false);
 const showSaveModal = ref(false);
 const saveFlash = ref(false);
+
+// Debug mode - only on localhost
+const isLocalhost = computed(() => {
+  return (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+  );
+});
+
+const enableAllSpecials = () => {
+  upgrades.value.forEach((u: Upgrade) => {
+    if (u.category === "special") {
+      u.purchased = true;
+    }
+  });
+  addEvent("🔧 [DEBUG] All special upgrades enabled!");
+};
 
 const isResearchUnlocked = () => {
   return (
@@ -168,20 +185,36 @@ onMounted(() => {
     <AchievementNotification />
   </div>
 
+  <!-- Debug controls (bottom left) - only on localhost -->
+  <div v-if="isLocalhost" class="fixed bottom-4 left-4 z-40">
+    <button
+      @click="enableAllSpecials"
+      class="px-3 py-2 rounded-lg text-xs font-semibold bg-purple-600/80 hover:bg-purple-500 text-white border border-purple-400/50 backdrop-blur-sm transition-all">
+      🔧 Enable All Specials
+    </button>
+  </div>
+
   <!-- Save controls (bottom right) -->
   <div class="fixed bottom-4 right-4 z-40 flex items-center gap-2">
     <!-- Auto-save indicator -->
     <div
-      class="px-3 py-2 rounded-lg text-xs bg-black/60 backdrop-blur-sm border border-gray-700/50 flex items-center gap-2">
+      class="px-3 py-2 rounded-lg text-xs backdrop-blur-sm flex items-center gap-2"
+      :class="
+        saveStore.autoSaveEnabled
+          ? 'bg-green-900/40 border border-green-500/40'
+          : 'bg-red-900/40 border border-red-500/40'
+      ">
       <button
         @click="saveStore.toggleAutoSave"
-        class="flex items-center gap-1.5 transition-colors"
-        :class="saveStore.autoSaveEnabled ? 'text-green-400' : 'text-gray-500'">
+        class="flex items-center gap-1.5 transition-colors font-medium"
+        :class="saveStore.autoSaveEnabled ? 'text-green-400' : 'text-red-400'">
         <span>{{ saveStore.autoSaveEnabled ? "🔄" : "⏸️" }}</span>
-        <span>Auto-save</span>
+        <span>Auto-save {{ saveStore.autoSaveEnabled ? "ON" : "OFF" }}</span>
       </button>
-      <span class="text-gray-600">|</span>
-      <span class="text-gray-400" v-if="saveStore.lastSaveTime">
+      <span v-if="saveStore.autoSaveEnabled" class="text-gray-500">|</span>
+      <span
+        class="text-gray-400"
+        v-if="saveStore.lastSaveTime && saveStore.autoSaveEnabled">
         {{ saveStore.timeSinceLastSave }}
       </span>
     </div>
