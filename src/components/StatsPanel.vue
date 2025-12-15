@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { useGameState } from "@/composables/useGameState";
-import { formatBTC, formatNumber, formatPercent } from "@/utils/formatters";
+import {
+  formatBTC,
+  formatNumber,
+  formatPercent,
+  formatUSD,
+} from "@/utils/formatters";
 
 const {
   bitcoin,
+  usdBalance,
   hashRate,
-  electricityDrain,
+  electricityCostPerSecond,
   miningRate,
-  netProfit,
+  netProfitUSD,
   btcPrice,
   marketTrend,
   difficulty,
@@ -19,15 +25,42 @@ const {
   activeEvent,
   eventTimer,
   prestigeLevel,
+  sellBTC,
+  sellAllBTC,
   MAX_BITCOIN,
 } = useGameState();
 </script>
 
 <template>
   <div class="stats-panel">
+    <!-- BTC Balance -->
     <div class="stat main-balance">
       <span class="label">₿ Balance</span>
       <span class="value">{{ formatBTC(bitcoin) }} BTC</span>
+      <span class="usd-value">≈ {{ formatUSD(bitcoin * btcPrice) }}</span>
+    </div>
+
+    <!-- USD Balance with Sell Buttons -->
+    <div class="stat usd-balance">
+      <span class="label">💵 USD Balance</span>
+      <span class="value usd">{{ formatUSD(usdBalance) }}</span>
+      <div class="sell-buttons">
+        <button
+          class="sell-btn"
+          :disabled="bitcoin < 0.1"
+          @click="sellBTC(0.1)">
+          Sell 0.1 BTC
+        </button>
+        <button class="sell-btn" :disabled="bitcoin < 1" @click="sellBTC(1)">
+          Sell 1 BTC
+        </button>
+        <button
+          class="sell-btn sell-all"
+          :disabled="bitcoin <= 0"
+          @click="sellAllBTC()">
+          Sell All
+        </button>
+      </div>
     </div>
 
     <div class="stat-row">
@@ -37,7 +70,7 @@ const {
       </div>
       <div class="stat">
         <span class="label">Power Cost</span>
-        <span class="value">{{ formatBTC(electricityDrain / 100) }}/s</span>
+        <span class="value">{{ formatUSD(electricityCostPerSecond) }}/s</span>
       </div>
     </div>
 
@@ -46,9 +79,11 @@ const {
         <span class="label">Mining Rate</span>
         <span class="value">{{ formatBTC(miningRate) }}/s</span>
       </div>
-      <div class="stat" :class="{ negative: netProfit < 0 }">
+      <div
+        class="stat"
+        :class="{ negative: netProfitUSD < 0, positive: netProfitUSD > 0 }">
         <span class="label">Net Profit</span>
-        <span class="value">{{ formatBTC(netProfit) }}/s</span>
+        <span class="value">{{ formatUSD(netProfitUSD) }}/s</span>
       </div>
     </div>
 
@@ -147,6 +182,58 @@ const {
   font-size: 2em;
   color: #f7931a;
   font-weight: bold;
+}
+
+.main-balance .usd-value {
+  display: block;
+  font-size: 0.9em;
+  color: #888;
+  margin-top: 5px;
+}
+
+.usd-balance {
+  background: linear-gradient(135deg, #2ed57322 0%, #2ed57311 100%);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.usd-balance .value.usd {
+  font-size: 1.8em;
+  color: #2ed573;
+  font-weight: bold;
+}
+
+.sell-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.sell-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: linear-gradient(135deg, #f7931a 0%, #e67e22 100%);
+  color: white;
+  font-size: 0.8em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sell-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(247, 147, 26, 0.4);
+}
+
+.sell-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sell-btn.sell-all {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
 }
 
 .stat-row {

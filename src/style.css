@@ -101,6 +101,10 @@
     background: rgba(255, 255, 255, 0.03);
   }
 
+  .stat-card span {
+    transition: all 0.5s ease-out;
+  }
+
   .stat-card:hover {
     background: rgba(255, 255, 255, 0.06);
   }

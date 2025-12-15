@@ -1,18 +1,23 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useGameState } from "@/composables/useGameState";
-import { formatBTC, formatNumber } from "@/utils/formatters";
+import { formatBTC, formatNumber, formatUSD } from "@/utils/formatters";
 
 const {
   bitcoin,
+  usdBalance,
+  btcPrice,
   mineClick,
+  sellBTC,
+  sellAllBTC,
   effectiveClickPower,
   effectiveDifficulty,
   effectiveBlockReward,
   INITIAL_BLOCK_REWARD,
   miningRate,
-  netProfit,
+  netProfitUSD,
   hashRate,
-  electricityDrain,
+  electricityCostPerSecond,
   activeEvent,
   eventTimer,
   prestigeLevel,
@@ -24,6 +29,19 @@ const clickPowerBTC = () => {
     (effectiveBlockReward.value / INITIAL_BLOCK_REWARD)
   );
 };
+
+// Calculate interest rate based on debt
+const interestRate = computed(() => {
+  if (usdBalance.value >= 0) return 0;
+  const debt = Math.abs(usdBalance.value);
+  let rate = 3; // 3% base
+  if (debt > 1000) rate += 2;
+  if (debt > 10000) rate += 3;
+  if (debt > 100000) rate += 5;
+  if (debt > 1000000) rate += 10;
+  if (debt > 10000000) rate += 15;
+  return rate;
+});
 </script>
 
 <template>
@@ -58,10 +76,10 @@ const clickPowerBTC = () => {
         <span class="text-lg">💡</span>
         <div class="flex flex-col">
           <span class="text-[0.6rem] text-gray-400 uppercase tracking-wide"
-            >Power</span
+            >Power Cost</span
           >
           <span class="text-sm font-semibold text-white"
-            >-{{ formatBTC(electricityDrain / 100) }}/s</span
+            >{{ formatUSD(electricityCostPerSecond) }}/s</span
           >
         </div>
       </div>
@@ -74,22 +92,23 @@ const clickPowerBTC = () => {
           <span
             class="text-sm font-semibold"
             :class="
-              netProfit > 0
+              netProfitUSD > 0
                 ? 'text-profit'
-                : netProfit < 0
+                : netProfitUSD < 0
                 ? 'text-loss'
                 : 'text-white'
             "
-            >{{ formatBTC(netProfit) }}/s</span
+            >{{ formatUSD(netProfitUSD) }}/s</span
           >
         </div>
       </div>
     </div>
 
-    <!-- Center: Balance + Mine Button -->
+    <!-- Center: Balances + Mine Button -->
     <div
       class="flex flex-col items-center justify-center text-center order-first md:order-none">
-      <div class="flex flex-col items-center mb-4">
+      <!-- BTC Balance -->
+      <div class="flex flex-col items-center mb-2">
         <span class="text-xs text-gray-400 uppercase tracking-wider"
           >₿ Balance</span
         >
@@ -97,7 +116,76 @@ const clickPowerBTC = () => {
           class="text-4xl sm:text-3xl font-bold text-gradient-bitcoin leading-tight select-text"
           >{{ formatBTC(bitcoin) }}</span
         >
-        <span class="text-base font-semibold text-bitcoin">BTC</span>
+        <span class="text-sm text-gray-400"
+          >≈ {{ formatUSD(bitcoin * btcPrice) }}</span
+        >
+      </div>
+
+      <!-- USD Balance & Sell Section -->
+      <div
+        class="w-full max-w-[260px] mb-4 rounded-xl overflow-hidden border"
+        :class="
+          usdBalance < 0
+            ? 'border-red-500/50 bg-gradient-to-b from-red-900/20 to-red-900/5'
+            : 'border-green-500/30 bg-gradient-to-b from-green-900/20 to-green-900/5'
+        ">
+        <div
+          class="flex items-center justify-between px-3 py-2"
+          :class="usdBalance < 0 ? 'bg-red-500/10' : 'bg-green-500/10'">
+          <span
+            class="text-xs uppercase tracking-wider font-medium"
+            :class="usdBalance < 0 ? 'text-red-300/80' : 'text-green-300/80'"
+            >{{ usdBalance < 0 ? "🔴 DEBT" : "💵 Cash" }}</span
+          >
+          <span
+            class="text-xl font-bold"
+            :class="usdBalance < 0 ? 'text-red-400' : 'text-green-400'"
+            >{{ formatUSD(usdBalance) }}</span
+          >
+        </div>
+        <!-- Interest rate warning when in debt -->
+        <div
+          v-if="usdBalance < 0"
+          class="px-3 py-1.5 bg-red-500/20 border-t border-red-500/30 flex items-center justify-between">
+          <span class="text-xs text-red-300">📈 Interest Rate:</span>
+          <span class="text-sm font-bold text-red-400 animate-pulse"
+            >{{ interestRate }}%/sec</span
+          >
+        </div>
+        <div class="p-2 bg-black/20">
+          <div class="text-[0.65rem] text-gray-500 text-center mb-1.5">
+            Sell BTC @ {{ formatUSD(btcPrice) }}/BTC
+          </div>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button
+              class="py-1.5 px-2 rounded-lg text-xs font-semibold transition-all duration-200 bg-gradient-to-b from-bitcoin to-bitcoin-dark hover:from-bitcoin-light hover:to-bitcoin border border-bitcoin-dark/50 shadow-sm hover:shadow-bitcoin/30 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:shadow-none"
+              :disabled="bitcoin < 0.1"
+              @click="sellBTC(0.1)">
+              <span class="block text-white">0.1 ₿</span>
+              <span class="block text-[0.6rem] text-white/70">{{
+                formatUSD(0.1 * btcPrice)
+              }}</span>
+            </button>
+            <button
+              class="py-1.5 px-2 rounded-lg text-xs font-semibold transition-all duration-200 bg-gradient-to-b from-bitcoin to-bitcoin-dark hover:from-bitcoin-light hover:to-bitcoin border border-bitcoin-dark/50 shadow-sm hover:shadow-bitcoin/30 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:shadow-none"
+              :disabled="bitcoin < 1"
+              @click="sellBTC(1)">
+              <span class="block text-white">1 ₿</span>
+              <span class="block text-[0.6rem] text-white/70">{{
+                formatUSD(1 * btcPrice)
+              }}</span>
+            </button>
+            <button
+              class="py-1.5 px-2 rounded-lg text-xs font-semibold transition-all duration-200 bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 border border-emerald-800/50 shadow-sm hover:shadow-emerald-500/30 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:shadow-none"
+              :disabled="bitcoin <= 0"
+              @click="sellAllBTC()">
+              <span class="block text-white">ALL</span>
+              <span class="block text-[0.6rem] text-white/70">{{
+                formatUSD(bitcoin * btcPrice)
+              }}</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <button class="btn-mine" @click="mineClick">
@@ -136,13 +224,16 @@ const clickPowerBTC = () => {
     <div
       class="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-3 justify-center order-2 md:order-none">
       <div
-        class="stat-card text-center border border-bitcoin/20 bg-gradient-to-br from-bitcoin/15 to-bitcoin/5">
+        class="stat-card text-center border border-green-500/20 bg-gradient-to-br from-green-500/15 to-green-500/5">
         <span
           class="block text-[0.6rem] text-gray-400 uppercase tracking-wide mb-1"
-          >Portfolio Value</span
+          >BTC Value</span
         >
-        <span class="block text-lg font-semibold text-white"
-          >${{ formatNumber(bitcoin * 100) }}</span
+        <span class="block text-lg font-semibold text-white">{{
+          formatUSD(bitcoin * btcPrice)
+        }}</span>
+        <span class="block text-xs text-gray-400 mt-0.5"
+          >@ {{ formatUSD(btcPrice) }}/BTC</span
         >
       </div>
       <div class="stat-card text-center">
@@ -162,13 +253,13 @@ const clickPowerBTC = () => {
         <span
           class="block text-lg font-semibold"
           :class="
-            netProfit > 0
+            netProfitUSD > 0
               ? 'text-profit'
-              : netProfit < 0
+              : netProfitUSD < 0
               ? 'text-loss'
               : 'text-white'
           "
-          >{{ formatBTC(netProfit * 3600) }}</span
+          >{{ formatUSD(netProfitUSD * 3600) }}</span
         >
       </div>
     </div>

@@ -87,3 +87,10 @@ const {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Smooth number transitions */
+span {
+  transition: all 0.4s ease-out;
+}
+</style>

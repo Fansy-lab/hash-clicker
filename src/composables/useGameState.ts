@@ -40,6 +40,8 @@ function createGameState() {
   // Market & Economy
   const btcPrice = ref(100);
   const marketTrend = ref(0);
+  const usdBalance = ref(50); // Start with $50 to buy first USB miner
+  const principalDebt = ref(0); // Track debt without interest (for debugging)
 
   // Difficulty & Halving
   const difficulty = ref(BASE_DIFFICULTY);
@@ -600,8 +602,20 @@ function createGameState() {
     return (baseRate * rewardMultiplier) / 10000;
   });
 
+  // Net profit in BTC/s (mining rate only, electricity is paid in USD)
   const netProfit = computed(() => {
-    return miningRate.value - totalElectricityCost.value / 100;
+    return miningRate.value;
+  });
+
+  // Electricity cost in USD per second
+  const electricityCostPerSecond = computed(() => {
+    return totalElectricityCost.value;
+  });
+
+  // Net USD profit per second (BTC value mined minus electricity)
+  const netProfitUSD = computed(() => {
+    const btcValuePerSecond = miningRate.value * btcPrice.value;
+    return btcValuePerSecond - totalElectricityCost.value;
   });
 
   const progressToHalving = computed(() => {
@@ -748,16 +762,31 @@ function createGameState() {
     }
   };
 
+  // Sell BTC for USD at current market price
+  const sellBTC = (amount: number) => {
+    if (amount <= 0 || bitcoin.value < amount) return;
+    const usdAmount = amount * btcPrice.value;
+    bitcoin.value -= amount;
+    usdBalance.value += usdAmount;
+    stats.value.totalBTCSpent += amount;
+    addEvent(`Sold ${amount.toFixed(6)} BTC for $${usdAmount.toFixed(2)}`);
+  };
+
+  // Sell all BTC
+  const sellAllBTC = () => {
+    if (bitcoin.value <= 0) return;
+    sellBTC(bitcoin.value);
+  };
+
   const buyRig = (rig: Rig) => {
     const cost = getRigCost(rig);
-    if (bitcoin.value >= cost) {
-      bitcoin.value -= cost;
-      stats.value.totalBTCSpent += cost;
+    if (usdBalance.value >= cost) {
+      usdBalance.value -= cost;
       rig.count++;
       stats.value.rigsBought++;
       hashRate.value = totalHashPower.value;
       electricityDrain.value = totalElectricityCost.value;
-      addEvent(`Bought ${rig.name}`);
+      addEvent(`Bought ${rig.name} for $${cost.toFixed(2)}`);
     }
   };
 
@@ -903,25 +932,51 @@ function createGameState() {
   };
 
   const updateMarket = () => {
-    const baseGrowth = 0.0002;
-    const timeBonus = Math.log10(gameTime.value + 1) * 0.00001;
-    const volatility = (Math.random() - 0.45) * 0.08;
+    // Store old price to calculate actual change
+    const oldPrice = btcPrice.value;
 
+    // Strong base growth ensures long-term upward trend
+    const baseGrowth = 0.002;
+    const timeBonus = Math.log10(gameTime.value + 1) * 0.0002;
+
+    // Volatility is centered but slightly bullish
+    const volatility = (Math.random() - 0.47) * 0.2;
+
+    // Big moves happen frequently
     let bigMove = 0;
-    if (Math.random() < 0.05) {
-      bigMove = (Math.random() - 0.3) * 0.15;
+    if (Math.random() < 0.12) {
+      bigMove = (Math.random() - 0.45) * 0.35;
+    }
+
+    // Mega pump events (bullish)
+    if (Math.random() < 0.025) {
+      const pumpSize = 0.3 + Math.random() * 0.5; // +30% to +80%
+      bigMove += pumpSize;
+      addEvent("🚀 MASSIVE PUMP! BTC MOONING!");
+    }
+
+    // Mega crash events (bearish) - slightly less frequent than pumps
+    if (Math.random() < 0.02) {
+      const crashSize = -(0.2 + Math.random() * 0.35); // -20% to -55%
+      bigMove += crashSize;
+      addEvent("💥 FLASH CRASH! PANIC SELLING!");
     }
 
     const priceChange = baseGrowth + timeBonus + volatility + bigMove;
     btcPrice.value *= 1 + priceChange;
-    marketTrend.value = priceChange;
 
-    const floorPrice = 50 + totalMinedEver.value * 0.001;
+    // Rising floor based on progress - ensures long term growth
+    const floorPrice =
+      50 + totalMinedEver.value * 0.01 + gameTime.value * 0.001;
     btcPrice.value = Math.max(floorPrice, btcPrice.value);
 
-    if (btcPrice.value > 1000000) {
-      btcPrice.value *= 0.999;
+    // Soft ceiling to prevent runaway prices
+    if (btcPrice.value > 500000) {
+      btcPrice.value *= 0.998;
     }
+
+    // Calculate actual percentage change after all adjustments
+    marketTrend.value = ((btcPrice.value - oldPrice) / oldPrice) * 100;
   };
 
   const gameLoop = () => {
@@ -952,24 +1007,56 @@ function createGameState() {
       bitcoin.value *= 1.000001;
     }
 
-    const powerCost = totalElectricityCost.value / 100;
+    // Electricity cost in USD per tick (game runs at 10 ticks/sec)
+    const powerCostUSD = totalElectricityCost.value / 10;
 
     const maxCanMine = MAX_BITCOIN - globalBitcoinMined.value;
     generation = Math.min(generation, maxCanMine);
 
+    // Always mine, but electricity cost accumulates (can go into debt)
     bitcoin.value += generation;
     totalMinedEver.value += generation;
     globalBitcoinMined.value += generation;
     stats.value.totalBTCEarned += generation;
 
-    bitcoin.value -= powerCost;
-    stats.value.totalBTCSpent += powerCost;
+    // Deduct electricity cost (can go negative!)
+    usdBalance.value -= powerCostUSD;
 
-    if (bitcoin.value < 0) {
-      bitcoin.value = 0;
-      if (gameTime.value % 100 === 0) {
-        addEvent("⚠️ Out of power! Mining paused.");
-      }
+    // Track principal debt (without interest) for debugging
+    if (usdBalance.value < 0) {
+      principalDebt.value += powerCostUSD;
+    } else {
+      principalDebt.value = 0; // Reset when out of debt
+    }
+
+    // Apply interest on debt (every second = every 10 ticks)
+    if (usdBalance.value < 0 && gameTime.value % 10 === 0) {
+      const debt = Math.abs(usdBalance.value);
+      // Interest rate scales with debt: 3% base + extra for larger debts
+      let interestRate = 0.03; // 3% base
+      if (debt > 1000) interestRate += 0.02; // +2% if over $1K
+      if (debt > 10000) interestRate += 0.03; // +3% if over $10K
+      if (debt > 100000) interestRate += 0.05; // +5% if over $100K
+      if (debt > 1000000) interestRate += 0.1; // +10% if over $1M
+      if (debt > 10000000) interestRate += 0.15; // +15% if over $10M
+
+      // Apply interest per second (divide by 100 to make it per-second rate)
+      const interest = debt * (interestRate / 100);
+      usdBalance.value -= interest;
+    }
+
+    // Warn player when in debt
+    if (usdBalance.value < -100 && gameTime.value % 100 === 0) {
+      const debt = Math.abs(usdBalance.value);
+      let interestRate = 3;
+      if (debt > 1000) interestRate += 2;
+      if (debt > 10000) interestRate += 3;
+      if (debt > 100000) interestRate += 5;
+      if (debt > 1000000) interestRate += 10;
+      if (debt > 10000000) interestRate += 15;
+      addEvent(
+        `🔴 DEBT: $${debt.toFixed(0)} @ ${interestRate}% interest! Sell BTC!`
+      );
     }
 
     blocksMined.value += generation / effectiveBlockReward.value;
@@ -1002,7 +1089,8 @@ function createGameState() {
       checkAchievements();
     }
 
-    if (gameTime.value % 50 === 0) {
+    // Market updates every 2 seconds
+    if (gameTime.value % 20 === 0) {
       updateMarket();
     }
 
@@ -1021,7 +1109,8 @@ function createGameState() {
   const initGame = () => {
     setInterval(gameLoop, 100);
     addEvent("Welcome to Bitcoin Mining Tycoon!");
-    addEvent("Goal: Mine as much of the 21M BTC cap as possible!");
+    addEvent("💡 Mine BTC → Sell for USD → Buy rigs → Repeat!");
+    addEvent("You start with $50 - buy your first miner!");
 
     // Debug/Cheat commands
     (window as any).cheat = {
@@ -1035,6 +1124,14 @@ function createGameState() {
       },
       setTotalMined: (amount: number) => {
         totalMinedEver.value = amount;
+      },
+      setUSD: (amount: number) => {
+        usdBalance.value = amount;
+        addEvent(`[CHEAT] Set USD to $${amount}`);
+      },
+      addUSD: (amount: number) => {
+        usdBalance.value += amount;
+        addEvent(`[CHEAT] Added $${amount}`);
       },
       unlockAll: () => {
         upgrades.value.forEach((u) => (u.purchased = true));
@@ -1057,6 +1154,8 @@ function createGameState() {
 Available cheats:
   cheat.setBTC(1000)      - Set BTC to exact amount
   cheat.addBTC(500)       - Add BTC to current balance
+  cheat.setUSD(1000)      - Set USD to exact amount
+  cheat.addUSD(500)       - Add USD to current balance
   cheat.setTotalMined(n)  - Set total mined (for unlocks)
   cheat.unlockAll()       - Unlock all upgrades
   cheat.maxRigs()         - Get 100 of each rig
@@ -1081,6 +1180,7 @@ Available cheats:
     activeTab,
     btcPrice,
     marketTrend,
+    usdBalance,
     difficulty,
     blocksMined,
     currentBlockReward,
@@ -1104,6 +1204,8 @@ Available cheats:
     effectiveClickPower,
     miningRate,
     netProfit,
+    electricityCostPerSecond,
+    netProfitUSD,
     progressToHalving,
     progressToCap,
     availableRigs,
@@ -1118,6 +1220,8 @@ Available cheats:
     // Actions
     getRigCost,
     mineClick,
+    sellBTC,
+    sellAllBTC,
     buyRig,
     buyUpgrade,
     startResearch,

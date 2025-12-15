@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useGameState } from "@/composables/useGameState";
-import { formatBTC, formatNumber } from "@/utils/formatters";
+import { formatNumber, formatUSD } from "@/utils/formatters";
 
 const {
-  bitcoin,
+  usdBalance,
   availableRigs,
   lockedRigsCount,
   nextLockedRig,
@@ -44,8 +44,8 @@ const hasPoolAccess = () => {
         :key="rig.id"
         class="rounded-lg p-2.5 border border-game-border transition-all duration-200 flex flex-col gap-1.5"
         :class="
-          bitcoin >= getRigCost(rig)
-            ? 'border-bitcoin/30 bg-gradient-to-br from-[#1e1e32] to-[#2a2a40]'
+          usdBalance >= getRigCost(rig)
+            ? 'border-green-500/30 bg-gradient-to-br from-[#1e1e32] to-[#2a2a40]'
             : 'bg-[#1e1e32]'
         ">
         <div class="flex justify-between items-center">
@@ -56,13 +56,13 @@ const hasPoolAccess = () => {
         </div>
         <div class="flex gap-2.5 text-xs text-gray-400">
           <span>⚡ {{ formatNumber(rig.hashPower) }} H/s</span>
-          <span>💡 {{ formatBTC(rig.electricityCost) }}/s</span>
+          <span>💡 {{ formatUSD(rig.electricityCost) }}/s</span>
         </div>
         <button
-          class="w-full py-2 rounded-md text-white text-xs cursor-pointer transition-all duration-200 border-none bg-gradient-to-br from-game-hover to-game-hoverLight hover:from-bitcoin hover:to-bitcoin-dark disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="bitcoin < getRigCost(rig)"
+          class="w-full py-2 rounded-md text-white text-xs cursor-pointer transition-all duration-200 border-none bg-gradient-to-br from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          :disabled="usdBalance < getRigCost(rig)"
           @click="buyRig(rig)">
-          Buy: {{ formatBTC(getRigCost(rig)) }} BTC
+          Buy: {{ formatUSD(getRigCost(rig)) }}
         </button>
       </div>
 
@@ -77,12 +77,12 @@ const hasPoolAccess = () => {
         </div>
         <div class="flex gap-2.5 text-xs text-gray-400">
           <span>⚡ {{ formatNumber(nextLockedRig.hashPower) }} H/s</span>
-          <span>💡 {{ formatBTC(nextLockedRig.electricityCost) }}/s</span>
+          <span>💡 {{ formatUSD(nextLockedRig.electricityCost) }}/s</span>
         </div>
         <div
           class="text-xs text-gray-400 py-1.5 px-2 bg-black/20 rounded text-center">
           {{ formatNumber(totalMinedEver) }} /
-          {{ formatNumber(nextLockedRig.unlockAt) }} BTC
+          {{ formatNumber(nextLockedRig.unlockAt) }} BTC mined
         </div>
       </div>
 
