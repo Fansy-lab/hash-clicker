@@ -20,11 +20,17 @@ const isResearchUnlocked = () => {
 </script>
 
 <template>
-  <div class="tabs">
+  <div
+    class="flex gap-1.5 mb-5 sm:mb-4 flex-wrap sm:flex-nowrap sm:overflow-x-auto sm:overflow-y-hidden sm:pb-1 scrollbar-hide">
     <template v-for="tab in tabs" :key="tab.id">
       <button
         v-if="tab.id !== 'research' || isResearchUnlocked()"
-        :class="{ active: activeTab === tab.id }"
+        class="flex-1 sm:flex-none min-w-[80px] sm:min-w-0 py-3 px-4 sm:py-2.5 sm:px-3 rounded-lg text-sm sm:text-xs whitespace-nowrap transition-all duration-200 border-none cursor-pointer no-select"
+        :class="
+          activeTab === tab.id
+            ? 'bg-gradient-to-br from-bitcoin to-bitcoin-dark text-white'
+            : 'bg-game-hover text-gray-400 hover:bg-game-hoverLight hover:text-white'
+        "
         @click="activeTab = tab.id">
         {{ tab.label }}
       </button>
@@ -33,63 +39,12 @@ const isResearchUnlocked = () => {
 </template>
 
 <style scoped>
-.tabs {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
 }
-
-.tabs button {
-  flex: 1;
-  min-width: 80px;
-  padding: 12px 15px;
-  background: #2d2d44;
-  border: none;
-  border-radius: 8px;
-  color: #888;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.9em;
-  /* Mobile optimizations */
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.tabs button:hover {
-  background: #3d3d55;
-  color: #fff;
-}
-
-.tabs button.active {
-  background: linear-gradient(135deg, #f7931a 0%, #c77b15 100%);
-  color: #fff;
-}
-
-@media (max-width: 480px) {
-  .tabs {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding-bottom: 5px;
-    margin-bottom: 15px;
-  }
-
-  .tabs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .tabs button {
-    flex: 0 0 auto;
-    min-width: auto;
-    padding: 10px 12px;
-    font-size: 0.8em;
-    white-space: nowrap;
-  }
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 </style>

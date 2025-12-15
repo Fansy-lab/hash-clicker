@@ -6,139 +6,53 @@ const { prestigeLevel, prestigePoints, prestigePointsOnReset, prestige } =
 </script>
 
 <template>
-  <div class="tab-content prestige-content">
-    <div class="prestige-info">
-      <div class="prestige-stat">
-        <span class="label">Current Level</span>
-        <span class="value">{{ prestigeLevel }}</span>
+  <div class="max-h-[400px] overflow-y-auto text-center">
+    <div class="flex justify-center gap-8 mb-6 flex-wrap">
+      <div class="text-center">
+        <span class="block text-gray-400 text-sm mb-1.5">Current Level</span>
+        <span class="text-4xl font-bold text-purple-500">{{
+          prestigeLevel
+        }}</span>
       </div>
-      <div class="prestige-stat">
-        <span class="label">Prestige Points</span>
-        <span class="value">{{ prestigePoints }}</span>
+      <div class="text-center">
+        <span class="block text-gray-400 text-sm mb-1.5">Prestige Points</span>
+        <span class="text-4xl font-bold text-purple-500">{{
+          prestigePoints
+        }}</span>
       </div>
-      <div class="prestige-stat">
-        <span class="label">Points on Reset</span>
-        <span class="value highlight">+{{ prestigePointsOnReset }}</span>
+      <div class="text-center">
+        <span class="block text-gray-400 text-sm mb-1.5">Points on Reset</span>
+        <span class="text-4xl font-bold text-profit"
+          >+{{ prestigePointsOnReset }}</span
+        >
       </div>
     </div>
 
-    <div class="prestige-bonuses">
-      <h3>Prestige Bonuses</h3>
-      <ul>
-        <li>+5% hash power per level (base)</li>
-        <li>+5% click power per level</li>
-        <li>Keep prestige upgrades</li>
-        <li>Halving progress preserved</li>
+    <div class="bg-[#1e1e32] rounded-xl p-4 mb-5 text-left">
+      <h3 class="text-profit mb-2.5">Prestige Bonuses</h3>
+      <ul class="m-0 pl-5 text-gray-400">
+        <li class="mb-1.5">+5% hash power per level (base)</li>
+        <li class="mb-1.5">+5% click power per level</li>
+        <li class="mb-1.5">Keep prestige upgrades</li>
+        <li class="mb-1.5">Halving progress preserved</li>
       </ul>
     </div>
 
-    <div class="prestige-warning">
-      <p>⚠️ Prestiging will reset:</p>
-      <ul>
-        <li>All BTC and mined amount</li>
-        <li>All rigs</li>
-        <li>All non-prestige upgrades</li>
-        <li>All research</li>
+    <div class="bg-[#1e1e32] rounded-xl p-4 mb-5 text-left">
+      <p class="text-loss mb-2.5">⚠️ Prestiging will reset:</p>
+      <ul class="m-0 pl-5 text-gray-400">
+        <li class="mb-1.5">All BTC and mined amount</li>
+        <li class="mb-1.5">All rigs</li>
+        <li class="mb-1.5">All non-prestige upgrades</li>
+        <li class="mb-1.5">All research</li>
       </ul>
     </div>
 
     <button
-      class="prestige-btn"
+      class="py-4 px-10 text-xl rounded-xl text-white cursor-pointer transition-all duration-200 border-none bg-gradient-to-br from-purple-600 to-purple-700 hover:scale-105 hover:shadow-[0_5px_20px_rgba(155,89,182,0.4)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
       :disabled="prestigePointsOnReset < 1"
       @click="prestige">
       ⭐ PRESTIGE (+{{ prestigePointsOnReset }} points)
     </button>
   </div>
 </template>
-
-<style scoped>
-.tab-content {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.prestige-content {
-  text-align: center;
-}
-
-.prestige-info {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  margin-bottom: 25px;
-  flex-wrap: wrap;
-}
-
-.prestige-stat {
-  text-align: center;
-}
-
-.prestige-stat .label {
-  display: block;
-  color: #888;
-  font-size: 0.9em;
-  margin-bottom: 5px;
-}
-
-.prestige-stat .value {
-  font-size: 2em;
-  font-weight: bold;
-  color: #9b59b6;
-}
-
-.prestige-stat .value.highlight {
-  color: #2ed573;
-}
-
-.prestige-bonuses,
-.prestige-warning {
-  background: #1e1e32;
-  border-radius: 10px;
-  padding: 15px;
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-.prestige-bonuses h3 {
-  color: #2ed573;
-  margin-bottom: 10px;
-}
-
-.prestige-warning p {
-  color: #ff6b6b;
-  margin-bottom: 10px;
-}
-
-.prestige-bonuses ul,
-.prestige-warning ul {
-  margin: 0;
-  padding-left: 20px;
-  color: #aaa;
-}
-
-.prestige-bonuses li,
-.prestige-warning li {
-  margin-bottom: 5px;
-}
-
-.prestige-btn {
-  padding: 15px 40px;
-  font-size: 1.2em;
-  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-  border: none;
-  border-radius: 10px;
-  color: #fff;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.prestige-btn:hover:not(:disabled) {
-  transform: scale(1.05);
-  box-shadow: 0 5px 20px rgba(155, 89, 182, 0.4);
-}
-
-.prestige-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-</style>

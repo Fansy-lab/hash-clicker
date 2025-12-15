@@ -21,30 +21,45 @@ const hasPoolAccess = () => {
 </script>
 
 <template>
-  <div class="tab-content">
-    <div v-if="hasPoolAccess()" class="pool-toggle">
-      <button :class="{ active: poolMining }" @click="togglePool">
+  <div class="max-h-[400px] overflow-y-auto">
+    <div
+      v-if="hasPoolAccess()"
+      class="flex items-center gap-4 mb-4 p-2.5 bg-[#1e1e32] rounded-lg">
+      <button
+        class="py-2.5 px-5 rounded-lg text-white cursor-pointer transition-all duration-200 border-none"
+        :class="
+          poolMining
+            ? 'bg-gradient-to-br from-blue-500 to-blue-600'
+            : 'bg-game-hover'
+        "
+        @click="togglePool">
         {{ poolMining ? "🏊 Pool Mining ON" : "⛏️ Solo Mining" }}
       </button>
-      <span class="pool-info">Pool: +20% power, -2% fee</span>
+      <span class="text-gray-400 text-sm">Pool: +20% power, -2% fee</span>
     </div>
 
-    <div class="items-grid">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-2">
       <div
         v-for="rig in availableRigs"
         :key="rig.id"
-        class="item rig"
-        :class="{ affordable: bitcoin >= getRigCost(rig) }">
-        <div class="item-header">
-          <span class="item-name">{{ rig.name }}</span>
-          <span class="item-count">x{{ rig.count }}</span>
+        class="rounded-lg p-2.5 border border-game-border transition-all duration-200 flex flex-col gap-1.5"
+        :class="
+          bitcoin >= getRigCost(rig)
+            ? 'border-bitcoin/30 bg-gradient-to-br from-[#1e1e32] to-[#2a2a40]'
+            : 'bg-[#1e1e32]'
+        ">
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-sm">{{ rig.name }}</span>
+          <span class="bg-bitcoin py-0.5 px-2 rounded-full text-xs"
+            >x{{ rig.count }}</span
+          >
         </div>
-        <div class="item-stats">
+        <div class="flex gap-2.5 text-xs text-gray-400">
           <span>⚡ {{ formatNumber(rig.hashPower) }} H/s</span>
           <span>💡 {{ formatBTC(rig.electricityCost) }}/s</span>
         </div>
         <button
-          class="buy-btn"
+          class="w-full py-2 rounded-md text-white text-xs cursor-pointer transition-all duration-200 border-none bg-gradient-to-br from-game-hover to-game-hoverLight hover:from-bitcoin hover:to-bitcoin-dark disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="bitcoin < getRigCost(rig)"
           @click="buyRig(rig)">
           Buy: {{ formatBTC(getRigCost(rig)) }} BTC
@@ -52,164 +67,33 @@ const hasPoolAccess = () => {
       </div>
 
       <!-- Next locked rig -->
-      <div v-if="nextLockedRig" class="item rig upcoming">
-        <div class="item-header">
-          <span class="item-name">🔒 {{ nextLockedRig.name }}</span>
+      <div
+        v-if="nextLockedRig"
+        class="rounded-lg p-2.5 border border-[#444] transition-all duration-200 flex flex-col gap-1.5 opacity-50 bg-gradient-to-br from-[#1a1a28] to-[#222235]">
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-sm text-gray-400"
+            >🔒 {{ nextLockedRig.name }}</span
+          >
         </div>
-        <div class="item-stats">
+        <div class="flex gap-2.5 text-xs text-gray-400">
           <span>⚡ {{ formatNumber(nextLockedRig.hashPower) }} H/s</span>
           <span>💡 {{ formatBTC(nextLockedRig.electricityCost) }}/s</span>
         </div>
-        <div class="unlock-requirement">
+        <div
+          class="text-xs text-gray-400 py-1.5 px-2 bg-black/20 rounded text-center">
           {{ formatNumber(totalMinedEver) }} /
           {{ formatNumber(nextLockedRig.unlockAt) }} BTC
         </div>
       </div>
 
       <!-- More rigs indicator -->
-      <div v-if="lockedRigsCount > 1" class="more-coming">
-        <span class="more-text">+{{ lockedRigsCount - 1 }} more</span>
+      <div
+        v-if="lockedRigsCount > 1"
+        class="flex items-center justify-center p-2.5 bg-white/[0.02] rounded-lg border border-dashed border-[#444]">
+        <span class="text-xs text-gray-500"
+          >+{{ lockedRigsCount - 1 }} more</span
+        >
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.tab-content {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.pool-toggle {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 15px;
-  padding: 10px;
-  background: #1e1e32;
-  border-radius: 8px;
-}
-
-.pool-toggle button {
-  padding: 10px 20px;
-  background: #2d2d44;
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.pool-toggle button.active {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-}
-
-.pool-info {
-  color: #888;
-  font-size: 0.9em;
-}
-
-.items-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 8px;
-}
-
-.item {
-  background: #1e1e32;
-  border-radius: 8px;
-  padding: 10px 12px;
-  border: 1px solid #333;
-  transition: all 0.2s;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.item.affordable {
-  border-color: #f7931a55;
-  background: linear-gradient(135deg, #1e1e32 0%, #2a2a40 100%);
-}
-
-.item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.item-name {
-  font-weight: bold;
-  font-size: 0.95em;
-}
-
-.item-count {
-  background: #f7931a;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 0.8em;
-}
-
-.item-stats {
-  display: flex;
-  gap: 10px;
-  font-size: 0.8em;
-  color: #aaa;
-}
-
-.buy-btn {
-  width: 100%;
-  padding: 8px;
-  background: linear-gradient(135deg, #2d2d44 0%, #3d3d55 100%);
-  border: none;
-  border-radius: 6px;
-  color: #fff;
-  font-size: 0.85em;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.buy-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #f7931a 0%, #c77b15 100%);
-}
-
-.buy-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Upcoming/Locked rigs */
-.item.upcoming {
-  opacity: 0.5;
-  border-color: #444;
-  background: linear-gradient(135deg, #1a1a28 0%, #222235 100%);
-}
-
-.item.upcoming .item-name {
-  color: #888;
-  font-size: 0.9em;
-}
-
-.unlock-requirement {
-  font-size: 0.75em;
-  color: #888;
-  padding: 6px 8px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  text-align: center;
-}
-
-.more-coming {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
-  border: 1px dashed #444;
-}
-
-.more-text {
-  font-size: 0.8em;
-  color: #666;
-}
-</style>

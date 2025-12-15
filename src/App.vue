@@ -31,17 +31,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="game-container">
-    <header class="game-header">
-      <h1>⛏️ Bitcoin Mining Tycoon</h1>
+  <div class="max-w-[900px] mx-auto p-4 sm:p-2 min-h-screen no-select">
+    <header class="text-center py-4 sm:py-2.5 mb-2.5 sm:mb-1">
+      <h1 class="text-3xl sm:text-xl font-bold text-gradient-bitcoin">
+        ⛏️ Bitcoin Mining Tycoon
+      </h1>
     </header>
 
-    <main class="game-main">
+    <main class="card-game p-6 sm:p-3 shadow-game">
       <HeroSection />
       <SecondaryStats />
       <TabNavigation />
 
-      <div class="tab-panel">
+      <div class="min-h-[300px] sm:min-h-[200px]">
         <RigsTab v-if="activeTab === 'rigs'" />
         <UpgradesTab v-if="activeTab === 'upgrades'" />
         <ResearchTab v-if="activeTab === 'research' && isResearchUnlocked()" />
@@ -58,165 +60,36 @@ onMounted(() => {
 </template>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* Legacy styles for donation footer */
+.donation-footer {
+  @apply mt-5 p-4 text-center;
 }
 
-/* Mobile optimizations */
-html,
-body {
-  overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
+.donation-content {
+  @apply inline-flex items-center gap-3 py-3 px-5 rounded-xl;
+  background: rgba(247, 147, 26, 0.1);
+  border: 1px solid rgba(247, 147, 26, 0.2);
 }
 
-/* Prevent text selection during gameplay */
-.game-container {
-  -webkit-user-select: none;
-  user-select: none;
+.donation-icon {
+  @apply text-2xl text-bitcoin;
 }
 
-/* Allow text selection in specific areas if needed */
-.balance-value,
+.donation-text {
+  @apply flex flex-col items-start gap-1;
+}
+
+.donation-label {
+  @apply text-sm text-gray-400;
+}
+
 .donation-address {
+  @apply font-mono text-sm text-bitcoin break-all cursor-pointer transition-colors;
   -webkit-user-select: text;
   user-select: text;
 }
 
-/* Ensure all buttons are touch-optimized */
-button {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #0a0a15 0%, #1a1a2e 50%, #0f0f1a 100%);
-  min-height: 100vh;
-  color: #fff;
-}
-
-.game-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 15px;
-  min-height: 100vh;
-}
-
-.game-header {
-  text-align: center;
-  padding: 15px 0;
-  margin-bottom: 10px;
-}
-
-.game-header h1 {
-  font-size: 1.8em;
-  background: linear-gradient(135deg, #f7931a 0%, #ffd700 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.game-main {
-  background: rgba(26, 26, 46, 0.8);
-  border-radius: 16px;
-  padding: 25px;
-  border: 1px solid #333;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-}
-
-.tab-panel {
-  min-height: 300px;
-}
-
-/* Mobile responsive styles */
-@media (max-width: 480px) {
-  .game-container {
-    padding: 8px;
-  }
-
-  .game-header {
-    padding: 10px 0;
-    margin-bottom: 5px;
-  }
-
-  .game-header h1 {
-    font-size: 1.4em;
-  }
-
-  .game-main {
-    padding: 12px;
-    border-radius: 12px;
-  }
-
-  .tab-panel {
-    min-height: 200px;
-  }
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #1a1a2e;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #f7931a55;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #f7931a;
-}
-
-.donation-footer {
-  margin-top: 20px;
-  padding: 15px;
-  text-align: center;
-}
-
-.donation-content {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  background: rgba(247, 147, 26, 0.1);
-  border: 1px solid rgba(247, 147, 26, 0.2);
-  border-radius: 12px;
-}
-
-.donation-icon {
-  font-size: 1.5em;
-  color: #f7931a;
-}
-
-.donation-text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.donation-label {
-  font-size: 0.85em;
-  color: #888;
-}
-
-.donation-address {
-  font-family: monospace;
-  font-size: 0.9em;
-  color: #f7931a;
-  word-break: break-all;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
 .donation-address:hover {
-  color: #ffd700;
+  @apply text-bitcoin-light;
 }
 </style>
