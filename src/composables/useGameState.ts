@@ -946,8 +946,6 @@ function createGameState() {
   >("accumulation");
   let phaseTimer = 0;
   let allTimeHigh = 100;
-  let recentLow = 100;
-  let recoveryTarget = 100;
 
   // Market prediction system (80% accurate)
   const marketPrediction = computed(() => {
@@ -1042,7 +1040,6 @@ function createGameState() {
         if (phaseTimer > 15 + Math.random() * 25) {
           marketPhaseRef.value = "distribution";
           phaseTimer = 0;
-          recoveryTarget = btcPrice.value * 0.7; // Remember 70% of peak as recovery target
           addEvent("⚠️ Whales are selling...");
         }
         break;
@@ -1070,7 +1067,6 @@ function createGameState() {
         priceChange += -0.005 + (Math.random() - 0.55) * 0.03;
         // Long decline, eventually bottoms out
         if (phaseTimer > 80 + Math.random() * 120) {
-          recentLow = btcPrice.value;
           marketPhaseRef.value = "accumulation";
           phaseTimer = 0;
           addEvent("🔄 Market finding bottom...");
@@ -1088,8 +1084,6 @@ function createGameState() {
         priceChange += -0.04 - Math.random() * 0.1; // -4% to -14% per tick!
         // Capitulation is short, leads to slow recovery
         if (phaseTimer > 10 + Math.random() * 20) {
-          recentLow = btcPrice.value;
-          recoveryTarget = allTimeHigh * (0.5 + Math.random() * 0.3); // Recovery target is 50-80% of ATH
           marketPhaseRef.value = "accumulation";
           phaseTimer = 0;
           addEvent("😰 Blood in the streets... time to accumulate?");

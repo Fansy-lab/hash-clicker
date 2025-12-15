@@ -10,14 +10,7 @@ const {
   totalMinedEver,
   getRigCost,
   buyRig,
-  poolMining,
-  togglePool,
-  upgrades,
 } = useGameState();
-
-const hasPoolAccess = () => {
-  return upgrades.value.find((u) => u.id === "pool-access")?.purchased ?? false;
-};
 </script>
 
 <template>
