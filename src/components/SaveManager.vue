@@ -1,43 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useGameState } from "@/composables/useGameState";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useSaveStore } from "@/stores/saveStore";
-import type { Upgrade } from "@/types/game";
+import { useGameState } from "@/composables/useGameState";
 
-// Components
-import HeroSection from "@/components/HeroSection.vue";
-import SecondaryStats from "@/components/SecondaryStats.vue";
-import TabNavigation from "@/components/TabNavigation.vue";
-import RigsTab from "@/components/RigsTab.vue";
-import UpgradesTab from "@/components/UpgradesTab.vue";
-import ResearchTab from "@/components/ResearchTab.vue";
-import AchievementsTab from "@/components/AchievementsTab.vue";
-import StatsTab from "@/components/StatsTab.vue";
-import PrestigeTab from "@/components/PrestigeTab.vue";
-import ActivityLog from "@/components/ActivityLog.vue";
-import AchievementNotification from "@/components/AchievementNotification.vue";
-
+const saveStore = useSaveStore();
 const {
-  activeTab,
-  upgrades,
-  initGame,
   getGameStateForSave,
   loadGameState,
   resetGameState,
+  initGame,
   addEvent,
 } = useGameState();
-const saveStore = useSaveStore();
 
-const gameReady = ref(false);
-const showSaveModal = ref(false);
+const showModal = ref(false);
+const gameStarted = ref(false);
 const saveFlash = ref(false);
-
-const isResearchUnlocked = () => {
-  return (
-    upgrades.value.find((u: Upgrade) => u.id === "research-lab")?.purchased ??
-    false
-  );
-};
 
 const handleSave = () => {
   const state = getGameStateForSave();
@@ -55,15 +32,15 @@ const handleLoad = () => {
   const savedState = saveStore.loadGame();
   if (savedState) {
     loadGameState(savedState);
-    gameReady.value = true;
-    showSaveModal.value = false;
+    gameStarted.value = true;
+    showModal.value = false;
   }
 };
 
 const handleNewGame = () => {
   resetGameState();
-  gameReady.value = true;
-  showSaveModal.value = false;
+  gameStarted.value = true;
+  showModal.value = false;
 };
 
 const handleDeleteSave = () => {
@@ -75,29 +52,35 @@ const handleDeleteSave = () => {
   }
 };
 
-onMounted(() => {
-  // Check for existing save
-  saveStore.checkForSave();
+// Start auto-save when game starts
+const startGame = () => {
+  initGame();
+  saveStore.startAutoSave(handleSave);
+};
 
+onMounted(() => {
+  saveStore.checkForSave();
   if (saveStore.hasSaveData) {
-    showSaveModal.value = true;
+    showModal.value = true;
   } else {
     // No save, start new game automatically
-    gameReady.value = true;
+    gameStarted.value = true;
+    startGame();
   }
-
-  // Initialize game loop
-  initGame();
-
-  // Start auto-save
-  saveStore.startAutoSave(handleSave);
 });
+
+onUnmounted(() => {
+  saveStore.stopAutoSave();
+});
+
+// Expose for parent to know when game is ready
+defineExpose({ gameStarted, startGame });
 </script>
 
 <template>
   <!-- Save/Load Modal -->
   <div
-    v-if="showSaveModal"
+    v-if="showModal"
     class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div
       class="bg-gradient-to-b from-game-card to-game-cardDark border border-bitcoin/30 rounded-2xl p-6 max-w-md w-full shadow-2xl">
@@ -140,36 +123,10 @@ onMounted(() => {
     </div>
   </div>
 
-  <!-- Main Game -->
-  <div class="max-w-[900px] mx-auto p-4 sm:p-2 min-h-screen no-select">
-    <header class="text-center py-4 sm:py-2.5 mb-2.5 sm:mb-1">
-      <h1 class="text-3xl sm:text-xl font-bold text-gradient-bitcoin">
-        ⛏️ Bitcoin Mining Tycoon
-      </h1>
-    </header>
-
-    <main class="card-game p-6 sm:p-3 shadow-game">
-      <HeroSection />
-      <SecondaryStats />
-      <TabNavigation />
-
-      <div class="min-h-[300px] sm:min-h-[200px]">
-        <RigsTab v-if="activeTab === 'rigs'" />
-        <UpgradesTab v-if="activeTab === 'upgrades'" />
-        <ResearchTab v-if="activeTab === 'research' && isResearchUnlocked()" />
-        <AchievementsTab v-if="activeTab === 'achievements'" />
-        <StatsTab v-if="activeTab === 'stats'" />
-        <PrestigeTab v-if="activeTab === 'prestige'" />
-      </div>
-
-      <ActivityLog />
-    </main>
-
-    <AchievementNotification />
-  </div>
-
-  <!-- Save controls (bottom right) -->
-  <div class="fixed bottom-4 right-4 z-40 flex items-center gap-2">
+  <!-- In-game save controls (shown when modal is closed and game started) -->
+  <div
+    v-if="!showModal && gameStarted"
+    class="fixed bottom-4 right-4 z-40 flex items-center gap-2">
     <!-- Auto-save indicator -->
     <div
       class="px-3 py-2 rounded-lg text-xs bg-black/60 backdrop-blur-sm border border-gray-700/50 flex items-center gap-2">
@@ -196,38 +153,3 @@ onMounted(() => {
     </button>
   </div>
 </template>
-
-<style>
-/* Legacy styles for donation footer */
-.donation-footer {
-  @apply mt-5 p-4 text-center;
-}
-
-.donation-content {
-  @apply inline-flex items-center gap-3 py-3 px-5 rounded-xl;
-  background: rgba(247, 147, 26, 0.1);
-  border: 1px solid rgba(247, 147, 26, 0.2);
-}
-
-.donation-icon {
-  @apply text-2xl text-bitcoin;
-}
-
-.donation-text {
-  @apply flex flex-col items-start gap-1;
-}
-
-.donation-label {
-  @apply text-sm text-gray-400;
-}
-
-.donation-address {
-  @apply font-mono text-sm text-bitcoin break-all cursor-pointer transition-colors;
-  -webkit-user-select: text;
-  user-select: text;
-}
-
-.donation-address:hover {
-  @apply text-bitcoin-light;
-}
-</style>

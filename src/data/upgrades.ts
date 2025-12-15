@@ -5,7 +5,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "better-drivers",
     name: "Optimized Drivers",
-    cost: 20,
+    cost: 50,
     effect: "+25% GPU efficiency",
     purchased: false,
     category: "efficiency",
@@ -15,7 +15,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "overclock-1",
     name: "Basic Overclocking",
-    cost: 100,
+    cost: 500,
     effect: "+30% all hash power",
     purchased: false,
     category: "efficiency",
@@ -25,7 +25,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "cooling-1",
     name: "Air Cooling System",
-    cost: 250,
+    cost: 1500,
     effect: "-15% electricity cost",
     purchased: false,
     category: "efficiency",
@@ -35,7 +35,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "cooling-2",
     name: "Liquid Cooling",
-    cost: 1000,
+    cost: 7500,
     effect: "-25% electricity cost",
     purchased: false,
     category: "efficiency",
@@ -46,7 +46,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "cooling-3",
     name: "Immersion Cooling",
-    cost: 10000,
+    cost: 75000,
     effect: "-40% electricity cost",
     purchased: false,
     category: "efficiency",
@@ -57,7 +57,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "firmware-1",
     name: "Custom Firmware",
-    cost: 500,
+    cost: 3000,
     effect: "+20% ASIC efficiency",
     purchased: false,
     category: "efficiency",
@@ -67,7 +67,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "firmware-2",
     name: "BraiinsOS",
-    cost: 5000,
+    cost: 35000,
     effect: "+35% ASIC efficiency",
     purchased: false,
     category: "efficiency",
@@ -78,7 +78,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "solar-1",
     name: "Solar Panels",
-    cost: 2500,
+    cost: 15000,
     effect: "-20% electricity during day",
     purchased: false,
     category: "efficiency",
@@ -88,7 +88,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "bulk-power",
     name: "Bulk Power Deal",
-    cost: 25000,
+    cost: 150000,
     effect: "-30% all electricity costs",
     purchased: false,
     category: "efficiency",
@@ -98,7 +98,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "green-energy",
     name: "Green Energy Contract",
-    cost: 100000,
+    cost: 750000,
     effect: "-50% electricity costs",
     purchased: false,
     category: "efficiency",
@@ -111,7 +111,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "click-1",
     name: "Mechanical Keyboard",
-    cost: 15,
+    cost: 35,
     effect: "+50% click power",
     purchased: false,
     category: "power",
@@ -121,7 +121,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "click-2",
     name: "Gaming Mouse",
-    cost: 75,
+    cost: 350,
     effect: "+100% click power",
     purchased: false,
     category: "power",
@@ -132,7 +132,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "click-3",
     name: "Auto-Clicker Script",
-    cost: 500,
+    cost: 3000,
     effect: "+200% click power",
     purchased: false,
     category: "power",
@@ -143,7 +143,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "click-4",
     name: "Neural Interface",
-    cost: 10000,
+    cost: 75000,
     effect: "+500% click power",
     purchased: false,
     category: "power",
@@ -154,7 +154,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "hash-boost-1",
     name: "Hash Algorithm v2",
-    cost: 1000,
+    cost: 7500,
     effect: "+50% all hash power",
     purchased: false,
     category: "power",
@@ -164,7 +164,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "hash-boost-2",
     name: "Hash Algorithm v3",
-    cost: 25000,
+    cost: 175000,
     effect: "+75% all hash power",
     purchased: false,
     category: "power",
@@ -175,7 +175,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "hash-boost-3",
     name: "Quantum Hash Protocol",
-    cost: 500000,
+    cost: 3500000,
     effect: "+100% all hash power",
     purchased: false,
     category: "power",
@@ -186,7 +186,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "parallel-1",
     name: "Parallel Processing",
-    cost: 5000,
+    cost: 35000,
     effect: "+40% passive mining",
     purchased: false,
     category: "power",
@@ -196,7 +196,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "parallel-2",
     name: "Distributed Computing",
-    cost: 75000,
+    cost: 500000,
     effect: "+60% passive mining",
     purchased: false,
     category: "power",
@@ -207,7 +207,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "ai-1",
     name: "AI Optimization",
-    cost: 50000,
+    cost: 350000,
     effect: "+30% all production",
     purchased: false,
     category: "power",
@@ -217,7 +217,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "ai-2",
     name: "Machine Learning Mining",
-    cost: 250000,
+    cost: 1750000,
     effect: "+50% all production",
     purchased: false,
     category: "power",
@@ -228,7 +228,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "ai-3",
     name: "Sentient Mining AI",
-    cost: 2500000,
+    cost: 17500000,
     effect: "+100% all production",
     purchased: false,
     category: "power",
@@ -241,7 +241,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "pool-access",
     name: "Mining Pool Access",
-    cost: 100,
+    cost: 500,
     effect: "Unlock pool mining (+20% but 2% fee)",
     purchased: false,
     category: "special",
@@ -250,7 +250,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "market-intel",
     name: "Market Intelligence",
-    cost: 1000,
+    cost: 7500,
     effect: "See BTC price trends",
     purchased: false,
     category: "special",
@@ -259,7 +259,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "lucky-mining",
     name: "Lucky Block Finder",
-    cost: 5000,
+    cost: 35000,
     effect: "5% chance for 2x block reward",
     purchased: false,
     category: "special",
@@ -268,7 +268,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "research-lab",
     name: "Research Laboratory",
-    cost: 10000,
+    cost: 75000,
     effect: "Unlock research system",
     purchased: false,
     category: "special",
@@ -277,7 +277,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "whale-alert",
     name: "Whale Alert System",
-    cost: 25000,
+    cost: 175000,
     effect: "Get warnings before market crashes",
     purchased: false,
     category: "special",
@@ -286,7 +286,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "hodl-vault",
     name: "HODL Vault",
-    cost: 50000,
+    cost: 350000,
     effect: "Earn 0.1% interest on stored BTC",
     purchased: false,
     category: "special",
@@ -295,7 +295,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "difficulty-shield",
     name: "Difficulty Shield",
-    cost: 500000,
+    cost: 3500000,
     effect: "Reduce difficulty impact by 25%",
     purchased: false,
     category: "special",
@@ -304,7 +304,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "halving-hedge",
     name: "Halving Hedge",
-    cost: 1000000,
+    cost: 7500000,
     effect: "Reduce halving impact by 50%",
     purchased: false,
     category: "special",
@@ -315,7 +315,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "prestige-boost-1",
     name: "Prestige Power I",
-    cost: 10000000,
+    cost: 75000000,
     effect: "Gain +10% per prestige level",
     purchased: false,
     category: "prestige",
@@ -325,7 +325,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "prestige-boost-2",
     name: "Prestige Power II",
-    cost: 100000000,
+    cost: 750000000,
     effect: "Gain +25% per prestige level",
     purchased: false,
     category: "prestige",
@@ -336,7 +336,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
   {
     id: "genesis-block",
     name: "Genesis Block Replica",
-    cost: 1000000000,
+    cost: 7500000000,
     effect: "+1000% all production (endgame)",
     purchased: false,
     category: "prestige",

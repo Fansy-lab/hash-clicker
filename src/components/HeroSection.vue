@@ -21,14 +21,23 @@ const {
   activeEvent,
   eventTimer,
   prestigeLevel,
+  poolMining,
+  togglePool,
+  upgrades,
 } = useGameState();
 
 const clickPowerBTC = () => {
-  return (
+  const base =
     (effectiveClickPower.value / (effectiveDifficulty.value * 50)) *
-    (effectiveBlockReward.value / INITIAL_BLOCK_REWARD)
-  );
+    (effectiveBlockReward.value / INITIAL_BLOCK_REWARD);
+  return poolMining.value ? base * 0.98 : base;
 };
+
+const hasPoolAccess = computed(() => {
+  return (
+    upgrades.value.find((u: any) => u.id === "pool-access")?.purchased ?? false
+  );
+});
 
 // Calculate interest rate based on debt
 const interestRate = computed(() => {
@@ -68,7 +77,9 @@ const interestRate = computed(() => {
             >Mining</span
           >
           <span class="text-sm font-semibold text-white"
-            >{{ formatBTC(miningRate) }}/s</span
+            >{{
+              formatBTC(poolMining ? miningRate * 0.98 : miningRate)
+            }}/s</span
           >
         </div>
       </div>
@@ -102,6 +113,35 @@ const interestRate = computed(() => {
           >
         </div>
       </div>
+      <!-- Pool Mining Toggle -->
+      <button
+        v-if="hasPoolAccess"
+        @click="togglePool"
+        class="stat-card flex items-center gap-2 cursor-pointer transition-all duration-200 hover:scale-105 col-span-2 md:col-span-1"
+        :class="
+          poolMining
+            ? 'ring-2 ring-bitcoin/50 bg-bitcoin/10'
+            : 'hover:bg-white/5'
+        ">
+        <span class="text-lg">{{ poolMining ? "⛏️" : "👤" }}</span>
+        <div class="flex flex-col items-start">
+          <span class="text-[0.6rem] text-gray-400 uppercase tracking-wide"
+            >Mining Pool</span
+          >
+          <span class="text-sm font-semibold flex items-center gap-1.5">
+            <span :class="poolMining ? 'text-bitcoin' : 'text-gray-500'">
+              {{ poolMining ? "ON" : "OFF" }}
+            </span>
+            <span v-if="poolMining" class="text-[0.6rem] text-gray-500">
+              <span class="text-green-400">+20% H/s</span>
+              <span class="text-red-400">-2%₿</span>
+            </span>
+            <span v-else class="text-[0.6rem] text-gray-500 italic"
+              >tap to join</span
+            >
+          </span>
+        </div>
+      </button>
     </div>
 
     <!-- Center: Balances + Mine Button -->
@@ -227,7 +267,7 @@ const interestRate = computed(() => {
         class="stat-card text-center border border-green-500/20 bg-gradient-to-br from-green-500/15 to-green-500/5">
         <span
           class="block text-[0.6rem] text-gray-400 uppercase tracking-wide mb-1"
-          >BTC Value</span
+          >BTC Portfolio Value</span
         >
         <span class="block text-lg font-semibold text-white">{{
           formatUSD(bitcoin * btcPrice)

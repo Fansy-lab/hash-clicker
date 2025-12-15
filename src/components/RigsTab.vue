@@ -22,22 +22,6 @@ const hasPoolAccess = () => {
 
 <template>
   <div class="max-h-[400px] overflow-y-auto">
-    <div
-      v-if="hasPoolAccess()"
-      class="flex items-center gap-4 mb-4 p-2.5 bg-[#1e1e32] rounded-lg">
-      <button
-        class="py-2.5 px-5 rounded-lg text-white cursor-pointer transition-all duration-200 border-none"
-        :class="
-          poolMining
-            ? 'bg-gradient-to-br from-blue-500 to-blue-600'
-            : 'bg-game-hover'
-        "
-        @click="togglePool">
-        {{ poolMining ? "🏊 Pool Mining ON" : "⛏️ Solo Mining" }}
-      </button>
-      <span class="text-gray-400 text-sm">Pool: +20% power, -2% fee</span>
-    </div>
-
     <div class="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-2">
       <div
         v-for="rig in availableRigs"

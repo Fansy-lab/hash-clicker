@@ -878,7 +878,11 @@ function createGameState() {
     achievements.value.forEach((ach: Achievement) => {
       if (!ach.unlocked && ach.check()) {
         ach.unlocked = true;
+        // Add reward BTC and treat it as mined (affects halving, difficulty, etc.)
         bitcoin.value += ach.reward;
+        totalMinedEver.value += ach.reward;
+        globalBitcoinMined.value += ach.reward;
+        stats.value.totalBTCEarned += ach.reward;
         stats.value.achievementsUnlocked++;
         addEvent(`🏆 Achievement: ${ach.name} (+${ach.reward} BTC)`);
         showAchievementNotification(ach.name, ach.reward);
@@ -931,48 +935,183 @@ function createGameState() {
     }
   };
 
+  // Market state tracking for realistic cycles
+  const marketPhaseRef = ref<
+    | "accumulation"
+    | "markup"
+    | "euphoria"
+    | "distribution"
+    | "decline"
+    | "capitulation"
+  >("accumulation");
+  let phaseTimer = 0;
+  let allTimeHigh = 100;
+  let recentLow = 100;
+  let recoveryTarget = 100;
+
+  // Market prediction system (80% accurate)
+  const marketPrediction = computed(() => {
+    const phase = marketPhaseRef.value;
+    const isAccurate = Math.random() < 0.8; // 80% chance of accurate prediction
+
+    // Accurate predictions based on phase
+    const accuratePredictions: Record<string, { hint: string; emoji: string }> =
+      {
+        accumulation: { hint: "Consolidation phase... patience", emoji: "😐" },
+        markup: { hint: "Bullish momentum building", emoji: "📈" },
+        euphoria: { hint: "⚠️ Extreme greed! Top may be near", emoji: "🔥" },
+        distribution: { hint: "Smart money exiting positions", emoji: "⚠️" },
+        decline: { hint: "Downtrend in progress", emoji: "📉" },
+        capitulation: { hint: "Extreme fear! Possible bottom", emoji: "😱" },
+      };
+
+    // Misleading predictions (20% of time)
+    const misleadingPredictions = [
+      { hint: "Breakout imminent!", emoji: "🚀" },
+      { hint: "Support holding strong", emoji: "💪" },
+      { hint: "Volatility decreasing", emoji: "😴" },
+      { hint: "Accumulation detected", emoji: "🐋" },
+      { hint: "Trend reversal possible", emoji: "🔄" },
+    ];
+
+    if (isAccurate) {
+      return (
+        accuratePredictions[phase] || { hint: "Analyzing...", emoji: "🔍" }
+      );
+    } else {
+      return misleadingPredictions[
+        Math.floor(Math.random() * misleadingPredictions.length)
+      ];
+    }
+  });
+
   const updateMarket = () => {
     // Store old price to calculate actual change
     const oldPrice = btcPrice.value;
 
-    // Strong base growth ensures long-term upward trend
-    const baseGrowth = 0.002;
-    const timeBonus = Math.log10(gameTime.value + 1) * 0.0002;
-
-    // Volatility is centered but slightly bullish
-    const volatility = (Math.random() - 0.47) * 0.2;
-
-    // Big moves happen frequently
-    let bigMove = 0;
-    if (Math.random() < 0.12) {
-      bigMove = (Math.random() - 0.45) * 0.35;
+    // Track ATH
+    if (btcPrice.value > allTimeHigh) {
+      allTimeHigh = btcPrice.value;
     }
 
-    // Mega pump events (bullish)
-    if (Math.random() < 0.025) {
-      const pumpSize = 0.3 + Math.random() * 0.5; // +30% to +80%
-      bigMove += pumpSize;
-      addEvent("🚀 MASSIVE PUMP! BTC MOONING!");
+    // Update phase timer
+    phaseTimer++;
+
+    // Base growth - very small but consistent (0.05% per tick average)
+    const baseGrowth = 0.0005;
+    const timeBonus = Math.log10(gameTime.value + 1) * 0.00005;
+
+    let priceChange = baseGrowth + timeBonus;
+
+    // Phase transitions and behavior
+    switch (marketPhaseRef.value) {
+      case "accumulation":
+        // Slow sideways/slightly up movement, low volatility
+        priceChange += (Math.random() - 0.48) * 0.02;
+        // Transition to markup after accumulation period
+        if (phaseTimer > 100 + Math.random() * 150) {
+          if (Math.random() < 0.4) {
+            marketPhaseRef.value = "markup";
+            phaseTimer = 0;
+            addEvent("📈 Market momentum building...");
+          }
+        }
+        break;
+
+      case "markup":
+        // Steady upward trend, moderate volatility
+        priceChange += 0.008 + (Math.random() - 0.3) * 0.04;
+        // Can transition to euphoria (big pump) or back to accumulation
+        if (phaseTimer > 50 + Math.random() * 100) {
+          const roll = Math.random();
+          if (roll < 0.35) {
+            marketPhaseRef.value = "euphoria";
+            phaseTimer = 0;
+            addEvent("🚀 EUPHORIA! BTC IS MOONING!");
+          } else if (roll < 0.5) {
+            marketPhaseRef.value = "accumulation";
+            phaseTimer = 0;
+          }
+        }
+        break;
+
+      case "euphoria":
+        // HARD pump - this is the "number go up" phase
+        priceChange += 0.03 + Math.random() * 0.08; // +3% to +11% per tick!
+        // Euphoria is short-lived, always leads to distribution/crash
+        if (phaseTimer > 15 + Math.random() * 25) {
+          marketPhaseRef.value = "distribution";
+          phaseTimer = 0;
+          recoveryTarget = btcPrice.value * 0.7; // Remember 70% of peak as recovery target
+          addEvent("⚠️ Whales are selling...");
+        }
+        break;
+
+      case "distribution":
+        // Top is in, smart money selling, volatile sideways/down
+        priceChange += (Math.random() - 0.6) * 0.05;
+        // Leads to decline or capitulation
+        if (phaseTimer > 30 + Math.random() * 50) {
+          const roll = Math.random();
+          if (roll < 0.4) {
+            marketPhaseRef.value = "capitulation";
+            phaseTimer = 0;
+            addEvent("💥 CRASH! PANIC SELLING!");
+          } else if (roll < 0.7) {
+            marketPhaseRef.value = "decline";
+            phaseTimer = 0;
+            addEvent("📉 Bear market begins...");
+          }
+        }
+        break;
+
+      case "decline":
+        // Slow bleed down - the painful part
+        priceChange += -0.005 + (Math.random() - 0.55) * 0.03;
+        // Long decline, eventually bottoms out
+        if (phaseTimer > 80 + Math.random() * 120) {
+          recentLow = btcPrice.value;
+          marketPhaseRef.value = "accumulation";
+          phaseTimer = 0;
+          addEvent("🔄 Market finding bottom...");
+        }
+        // Can have capitulation events during decline
+        if (Math.random() < 0.02) {
+          marketPhaseRef.value = "capitulation";
+          phaseTimer = 0;
+          addEvent("💥 FLASH CRASH!");
+        }
+        break;
+
+      case "capitulation":
+        // HARD crash - mirrors euphoria but down
+        priceChange += -0.04 - Math.random() * 0.1; // -4% to -14% per tick!
+        // Capitulation is short, leads to slow recovery
+        if (phaseTimer > 10 + Math.random() * 20) {
+          recentLow = btcPrice.value;
+          recoveryTarget = allTimeHigh * (0.5 + Math.random() * 0.3); // Recovery target is 50-80% of ATH
+          marketPhaseRef.value = "accumulation";
+          phaseTimer = 0;
+          addEvent("😰 Blood in the streets... time to accumulate?");
+        }
+        break;
     }
 
-    // Mega crash events (bearish) - slightly less frequent than pumps
-    if (Math.random() < 0.02) {
-      const crashSize = -(0.2 + Math.random() * 0.35); // -20% to -55%
-      bigMove += crashSize;
-      addEvent("💥 FLASH CRASH! PANIC SELLING!");
-    }
+    // Apply random noise
+    priceChange += (Math.random() - 0.5) * 0.01;
 
-    const priceChange = baseGrowth + timeBonus + volatility + bigMove;
+    // Apply change
     btcPrice.value *= 1 + priceChange;
 
-    // Rising floor based on progress - ensures long term growth
+    // Rising floor based on progress - ensures eventual recovery and long term growth
+    // Floor rises slowly, giving "slow grind back up" after crashes
     const floorPrice =
-      50 + totalMinedEver.value * 0.01 + gameTime.value * 0.001;
+      50 + totalMinedEver.value * 0.005 + gameTime.value * 0.0005;
     btcPrice.value = Math.max(floorPrice, btcPrice.value);
 
-    // Soft ceiling to prevent runaway prices
-    if (btcPrice.value > 500000) {
-      btcPrice.value *= 0.998;
+    // Soft ceiling to prevent complete runaway
+    if (btcPrice.value > 1000000) {
+      btcPrice.value *= 0.995;
     }
 
     // Calculate actual percentage change after all adjustments
@@ -1106,6 +1245,142 @@ function createGameState() {
     }
   };
 
+  // ==================== SAVE/LOAD ====================
+  const getGameStateForSave = () => {
+    return {
+      bitcoin: bitcoin.value,
+      totalMinedEver: totalMinedEver.value,
+      globalBitcoinMined: globalBitcoinMined.value,
+      hashRate: hashRate.value,
+      electricityDrain: electricityDrain.value,
+      gameTime: gameTime.value,
+      prestigeLevel: prestigeLevel.value,
+      prestigePoints: prestigePoints.value,
+      btcPrice: btcPrice.value,
+      usdBalance: usdBalance.value,
+      difficulty: difficulty.value,
+      blocksMined: blocksMined.value,
+      currentBlockReward: currentBlockReward.value,
+      halvingCount: halvingCount.value,
+      stats: { ...stats.value },
+      poolMining: poolMining.value,
+      rigs: rigs.value.map((r) => ({ id: r.id, count: r.count })),
+      upgrades: upgrades.value.map((u) => ({
+        id: u.id,
+        purchased: u.purchased,
+      })),
+      research: research.value.map((r) => ({
+        id: r.id,
+        progress: r.progress,
+        completed: r.completed,
+      })),
+      achievements: achievements.value.map((a) => ({
+        id: a.id,
+        unlocked: a.unlocked,
+      })),
+    };
+  };
+
+  const loadGameState = (
+    savedState: ReturnType<typeof getGameStateForSave>
+  ) => {
+    bitcoin.value = savedState.bitcoin;
+    totalMinedEver.value = savedState.totalMinedEver;
+    globalBitcoinMined.value = savedState.globalBitcoinMined;
+    hashRate.value = savedState.hashRate;
+    electricityDrain.value = savedState.electricityDrain;
+    gameTime.value = savedState.gameTime;
+    prestigeLevel.value = savedState.prestigeLevel;
+    prestigePoints.value = savedState.prestigePoints;
+    btcPrice.value = savedState.btcPrice;
+    usdBalance.value = savedState.usdBalance;
+    difficulty.value = savedState.difficulty;
+    blocksMined.value = savedState.blocksMined;
+    currentBlockReward.value = savedState.currentBlockReward;
+    halvingCount.value = savedState.halvingCount;
+    stats.value = { ...savedState.stats };
+    poolMining.value = savedState.poolMining;
+
+    // Restore rigs
+    savedState.rigs.forEach((savedRig) => {
+      const rig = rigs.value.find((r) => r.id === savedRig.id);
+      if (rig) rig.count = savedRig.count;
+    });
+
+    // Restore upgrades
+    savedState.upgrades.forEach((savedUpgrade) => {
+      const upgrade = upgrades.value.find((u) => u.id === savedUpgrade.id);
+      if (upgrade) upgrade.purchased = savedUpgrade.purchased;
+    });
+
+    // Restore research
+    savedState.research.forEach((savedResearch) => {
+      const r = research.value.find((res) => res.id === savedResearch.id);
+      if (r) {
+        r.progress = savedResearch.progress;
+        r.completed = savedResearch.completed;
+      }
+    });
+
+    // Restore achievements
+    savedState.achievements.forEach((savedAchievement) => {
+      const achievement = achievements.value.find(
+        (a) => a.id === savedAchievement.id
+      );
+      if (achievement) achievement.unlocked = savedAchievement.unlocked;
+    });
+
+    addEvent("💾 Game loaded successfully!");
+  };
+
+  const resetGameState = () => {
+    bitcoin.value = 0;
+    totalMinedEver.value = 0;
+    globalBitcoinMined.value = 0;
+    hashRate.value = 0;
+    electricityDrain.value = 0;
+    gameTime.value = 0;
+    prestigeLevel.value = 0;
+    prestigePoints.value = 0;
+    btcPrice.value = 100;
+    usdBalance.value = 50;
+    difficulty.value = BASE_DIFFICULTY;
+    blocksMined.value = 0;
+    currentBlockReward.value = INITIAL_BLOCK_REWARD;
+    halvingCount.value = 0;
+    poolMining.value = false;
+
+    stats.value = {
+      totalClicks: 0,
+      totalBTCEarned: 0,
+      totalBTCSpent: 0,
+      rigsBought: 0,
+      upgradesBought: 0,
+      achievementsUnlocked: 0,
+      prestigeResets: 0,
+      peakBTC: 0,
+      playTime: 0,
+    };
+
+    // Reset rigs
+    rigs.value = JSON.parse(JSON.stringify(INITIAL_RIGS));
+
+    // Reset upgrades
+    upgrades.value = JSON.parse(JSON.stringify(INITIAL_UPGRADES));
+
+    // Reset research
+    research.value = JSON.parse(JSON.stringify(INITIAL_RESEARCH));
+    activeResearch.value = null;
+
+    // Reset achievements (keep them but mark as not unlocked)
+    achievements.value.forEach((a) => (a.unlocked = false));
+
+    events.value = [];
+    addEvent("🆕 Started a new game!");
+    addEvent("💡 Mine BTC → Sell for USD → Buy rigs → Repeat!");
+    addEvent("You start with $50 - buy your first miner!");
+  };
+
   const initGame = () => {
     setInterval(gameLoop, 100);
     addEvent("Welcome to Bitcoin Mining Tycoon!");
@@ -1206,6 +1481,7 @@ Available cheats:
     netProfit,
     electricityCostPerSecond,
     netProfitUSD,
+    marketPrediction,
     progressToHalving,
     progressToCap,
     availableRigs,
@@ -1229,6 +1505,11 @@ Available cheats:
     prestige,
     addEvent,
     initGame,
+
+    // Save/Load
+    getGameStateForSave,
+    loadGameState,
+    resetGameState,
 
     // Constants
     MAX_BITCOIN,

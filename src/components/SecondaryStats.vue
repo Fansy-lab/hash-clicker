@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useGameState } from "@/composables/useGameState";
 import { formatBTC, formatNumber, formatPercent } from "@/utils/formatters";
 
@@ -12,7 +13,15 @@ const {
   globalBitcoinMined,
   progressToCap,
   MAX_BITCOIN,
+  marketPrediction,
+  upgrades,
 } = useGameState();
+
+const hasMarketIntel = computed(() => {
+  return (
+    upgrades.value.find((u: any) => u.id === "market-intel")?.purchased ?? false
+  );
+});
 </script>
 
 <template>
@@ -32,6 +41,12 @@ const {
           :class="marketTrend > 0 ? 'text-profit' : 'text-loss'">
           {{ marketTrend > 0 ? "▲" : "▼" }}
           {{ formatPercent(Math.abs(marketTrend)) }}
+        </span>
+        <!-- Market Intel prediction -->
+        <span
+          v-if="hasMarketIntel"
+          class="text-[0.6rem] text-yellow-400/80 mt-1 italic text-center leading-tight">
+          {{ marketPrediction.emoji }} {{ marketPrediction.hint }}
         </span>
       </div>
 
