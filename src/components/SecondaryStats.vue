@@ -87,7 +87,7 @@ const hasMarketIntel = computed(() => {
       <div class="p-2.5 sm:p-2 rounded-lg stat-card">
         <div class="flex justify-between text-sm sm:text-xs mb-2 text-gray-300">
           <span>🌍 Global Mined</span>
-          <span>{{ formatPercent(progressToCap / 100) }}</span>
+          <span>{{ formatPercent(progressToCap) }}</span>
         </div>
         <div class="progress-bar-container">
           <div

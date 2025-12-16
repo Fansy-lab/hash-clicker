@@ -329,7 +329,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
     effect: "Gain +25% per prestige level",
     purchased: false,
     category: "prestige",
-    unlockAt: 50000000,
+    unlockAt: 10000000,
     multiplier: 0.25,
     requirement: "prestige-boost-1",
   },
@@ -340,7 +340,7 @@ export const INITIAL_UPGRADES: Upgrade[] = [
     effect: "+1000% all production (endgame)",
     purchased: false,
     category: "prestige",
-    unlockAt: 500000000,
+    unlockAt: 18000000,
     multiplier: 11,
   },
 ];
