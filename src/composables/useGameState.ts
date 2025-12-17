@@ -101,6 +101,18 @@ function createGameState() {
   const achievementNotification = ref<AchievementNotification | null>(null);
   let notificationTimeout: number | null = null;
 
+  // Lucky mine notifications (support multiple)
+  const luckyMineNotifications = ref<
+    Array<{
+      id: number;
+      multiplier: number;
+      amount: number;
+      x: number;
+      y: number;
+    }>
+  >([]);
+  let luckyMineIdCounter = 0;
+
   // ==================== ACHIEVEMENTS ====================
   const achievements = ref<Achievement[]>([
     {
@@ -1036,12 +1048,104 @@ function createGameState() {
     let amount = effectiveClickPower.value / (effectiveDifficulty.value * 50);
     amount *= effectiveBlockReward.value / INITIAL_BLOCK_REWARD;
 
+    // Lucky mine system - requires lucky-mining upgrade
     if (
-      upgrades.value.find((u: Upgrade) => u.id === "lucky-mining")?.purchased &&
-      Math.random() < 0.05
+      upgrades.value.find((u: Upgrade) => u.id === "lucky-mining")?.purchased
     ) {
-      amount *= 2;
-      addEvent("🍀 Lucky click! Double reward!");
+      // Base 5% chance, improved by Fortune Charms
+      let luckyChance = 0.05;
+
+      if (
+        upgrades.value.find((u: Upgrade) => u.id === "lucky-boost-1")?.purchased
+      ) {
+        luckyChance += 0.03; // +3%
+      }
+      if (
+        upgrades.value.find((u: Upgrade) => u.id === "lucky-boost-2")?.purchased
+      ) {
+        luckyChance += 0.05; // +5%
+      }
+      if (
+        upgrades.value.find((u: Upgrade) => u.id === "lucky-boost-3")?.purchased
+      ) {
+        luckyChance += 0.07; // +7%
+      }
+      // Max chance: 20%
+
+      const random = Math.random();
+
+      if (random < luckyChance) {
+        // Determine which multiplier (weighted distribution)
+        const tierRoll = Math.random();
+        let luckyMultiplier = 5;
+
+        // Check for Lucky Amplifier - improves tier distribution
+        const hasLuckyAmplifier = upgrades.value.find(
+          (u: Upgrade) => u.id === "lucky-tier-boost"
+        )?.purchased;
+
+        if (hasLuckyAmplifier) {
+          // Better odds for higher tiers
+          if (tierRoll < 0.03) {
+            luckyMultiplier = 100; // 3% of lucky mines (was 1%)
+          } else if (tierRoll < 0.12) {
+            luckyMultiplier = 25; // 9% of lucky mines (was 4%)
+          } else if (tierRoll < 0.35) {
+            luckyMultiplier = 10; // 23% of lucky mines (was 15%)
+          } else {
+            luckyMultiplier = 5; // 65% of lucky mines (was 80%)
+          }
+        } else {
+          // Base distribution
+          if (tierRoll < 0.01) {
+            luckyMultiplier = 100; // 1% of lucky mines
+          } else if (tierRoll < 0.05) {
+            luckyMultiplier = 25; // 4% of lucky mines
+          } else if (tierRoll < 0.2) {
+            luckyMultiplier = 10; // 15% of lucky mines
+          } else {
+            luckyMultiplier = 5; // 80% of lucky mines
+          }
+        }
+
+        // Apply reward multiplier boosts
+        let rewardBoost = 1.0;
+        if (
+          upgrades.value.find((u: Upgrade) => u.id === "lucky-reward-1")
+            ?.purchased
+        ) {
+          rewardBoost += 0.5; // +50%
+        }
+        if (
+          upgrades.value.find((u: Upgrade) => u.id === "lucky-reward-2")
+            ?.purchased
+        ) {
+          rewardBoost += 1.0; // +100%
+        }
+        // Max boost: 2.5x (250%)
+
+        const finalMultiplier = luckyMultiplier * rewardBoost;
+        amount *= finalMultiplier;
+
+        // Show lucky mine notification
+        const notificationId = luckyMineIdCounter++;
+        luckyMineNotifications.value.push({
+          id: notificationId,
+          multiplier: finalMultiplier,
+          amount: amount,
+          x: 0, // Will be set by component
+          y: 0,
+        });
+
+        // Remove this notification after animation
+        setTimeout(() => {
+          luckyMineNotifications.value = luckyMineNotifications.value.filter(
+            (n) => n.id !== notificationId
+          );
+        }, 1300);
+
+        addEvent(`🍀 LUCKY MINE! ${finalMultiplier}x reward!`);
+      }
     }
 
     if (poolMining.value) {
@@ -1778,6 +1882,7 @@ Available cheats:
     activeResearch,
     achievements,
     achievementNotification,
+    luckyMineNotifications,
 
     // Computed
     effectiveDifficulty,
