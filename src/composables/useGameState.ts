@@ -58,6 +58,8 @@ function createGameState() {
   const clickMultiplier = ref(1);
   const passiveMultiplier = ref(1);
   const electricityReduction = ref(1);
+  const difficultyMultiplier = ref(1); // For events that affect difficulty
+  const btcPriceMultiplier = ref(1); // For events that affect BTC price
 
   // Store original values before events modify them
   const eventMultiplierBackup = ref<EventMultiplierBackup>({
@@ -267,36 +269,26 @@ function createGameState() {
 
   // ==================== RANDOM EVENTS ====================
   const possibleEvents: RandomEvent[] = [
+    // === POSITIVE EVENTS ===
     {
       id: "bull-run",
       name: "🚀 Bull Run!",
       description: "BTC price doubles temporarily!",
+      effectDescription: "📈 Price: 2x",
       duration: 300,
       effect: () => {
-        eventMultiplierBackup.value.btcPrice = btcPrice.value;
-        btcPrice.value *= 2;
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        btcPriceMultiplier.value = 2;
       },
       endEffect: () => {
-        btcPrice.value = eventMultiplierBackup.value.btcPrice;
-      },
-    },
-    {
-      id: "bear-market",
-      name: "📉 Bear Market",
-      description: "BTC price drops 50%",
-      duration: 300,
-      effect: () => {
-        eventMultiplierBackup.value.btcPrice = btcPrice.value;
-        btcPrice.value *= 0.5;
-      },
-      endEffect: () => {
-        btcPrice.value = eventMultiplierBackup.value.btcPrice;
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice;
       },
     },
     {
       id: "power-surge",
-      name: "⚡ Power Surge",
-      description: "Free electricity for 30 seconds!",
+      name: "⚡ Free Power!",
+      description: "Grid error - free electricity!",
+      effectDescription: "💡 Electricity: FREE",
       duration: 300,
       effect: () => {
         eventMultiplierBackup.value.electricity = electricityReduction.value;
@@ -309,7 +301,8 @@ function createGameState() {
     {
       id: "hash-boost",
       name: "💨 Hash Boost",
-      description: "Triple hash rate temporarily!",
+      description: "Perfect conditions! Triple hash rate!",
+      effectDescription: "⛏️ Mining: 3x",
       duration: 200,
       effect: () => {
         eventMultiplierBackup.value.global = globalMultiplier.value;
@@ -320,33 +313,154 @@ function createGameState() {
       },
     },
     {
-      id: "difficulty-spike",
-      name: "📈 Difficulty Spike",
-      description: "Mining difficulty doubled!",
-      duration: 400,
-      effect: () => {
-        eventMultiplierBackup.value.difficulty = difficulty.value;
-        difficulty.value *= 2;
-      },
-      endEffect: () => {
-        difficulty.value = eventMultiplierBackup.value.difficulty;
-      },
-    },
-    {
       id: "lucky-block",
       name: "🍀 Lucky Block",
       description: "Found a bonus block!",
+      effectDescription: "🎁 +5x block reward (instant)",
       duration: 0,
       effect: () => {
         const bonus = currentBlockReward.value * 5;
         bitcoin.value += bonus;
+        totalMinedEver.value += bonus;
+        globalBitcoinMined.value += bonus;
         addEvent(`Lucky block! +${formatBTC(bonus)} BTC`);
+      },
+    },
+    {
+      id: "etf-approval",
+      name: "📈 ETF Approved!",
+      description: "Institutional money flooding in!",
+      effectDescription: "⛏️ Mining: 3x | 📈 Price: 1.5x",
+      duration: 350,
+      effect: () => {
+        eventMultiplierBackup.value.global = globalMultiplier.value;
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        globalMultiplier.value = 3;
+        btcPriceMultiplier.value = 1.5;
+      },
+      endEffect: () => {
+        globalMultiplier.value = eventMultiplierBackup.value.global;
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice;
+      },
+    },
+    {
+      id: "found-wallet",
+      name: "💾 Ancient Wallet Found!",
+      description: "You recovered an old wallet with BTC!",
+      effectDescription: "🎁 +10% of total mined (instant)",
+      duration: 0,
+      effect: () => {
+        const bonus = Math.max(10, totalMinedEver.value * 0.1);
+        bitcoin.value += bonus;
+        addEvent(`Found ${formatBTC(bonus)} BTC in old wallet!`);
+      },
+    },
+    {
+      id: "el-salvador",
+      name: "🇸🇻 Nation Adopts BTC!",
+      description: "A country made Bitcoin legal tender!",
+      effectDescription: "📈 Price: 2.5x (some gains permanent)",
+      duration: 400,
+      effect: () => {
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        btcPriceMultiplier.value = 2.5;
+      },
+      endEffect: () => {
+        // Keep 20% of the gains permanently
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice * 1.2;
+      },
+    },
+    {
+      id: "celebrity-tweet",
+      name: "🐦 Celebrity Tweet!",
+      description: "Famous person tweeted about Bitcoin!",
+      effectDescription: "📈 Price: 1.8x",
+      duration: 150,
+      effect: () => {
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        btcPriceMultiplier.value = 1.8;
+      },
+      endEffect: () => {
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice;
+      },
+    },
+    {
+      id: "pool-bonus",
+      name: "🎁 Pool Bonus Payout!",
+      description: "Mining pool distributed bonus rewards!",
+      effectDescription: "🎁 +10x block reward (instant)",
+      duration: 0,
+      effect: () => {
+        const bonus = currentBlockReward.value * 10;
+        bitcoin.value += bonus;
+        totalMinedEver.value += bonus;
+        globalBitcoinMined.value += bonus;
+        addEvent(`Pool bonus: +${formatBTC(bonus)} BTC`);
+      },
+    },
+    {
+      id: "cool-weather",
+      name: "❄️ Cold Snap!",
+      description: "Natural cooling! 50% less electricity!",
+      effectDescription: "💡 Electricity: -50%",
+      duration: 400,
+      effect: () => {
+        eventMultiplierBackup.value.electricity = electricityReduction.value;
+        electricityReduction.value = 0.5;
+      },
+      endEffect: () => {
+        electricityReduction.value = eventMultiplierBackup.value.electricity;
+      },
+    },
+    {
+      id: "difficulty-drop",
+      name: "📉 Miners Capitulate!",
+      description: "Competitors shut down! Difficulty drops!",
+      effectDescription: "🎯 Difficulty: -50%",
+      duration: 300,
+      effect: () => {
+        eventMultiplierBackup.value.difficulty = difficultyMultiplier.value;
+        difficultyMultiplier.value = 0.5;
+      },
+      endEffect: () => {
+        difficultyMultiplier.value = eventMultiplierBackup.value.difficulty;
+      },
+    },
+
+    // === NEGATIVE EVENTS ===
+    {
+      id: "bear-market",
+      name: "📉 Bear Market",
+      description: "BTC price drops 50%",
+      effectDescription: "📉 Price: -50%",
+      duration: 300,
+      effect: () => {
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        btcPriceMultiplier.value = 0.5;
+      },
+      endEffect: () => {
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice;
+      },
+    },
+    {
+      id: "difficulty-spike",
+      name: "📈 Difficulty Spike",
+      description: "Mining difficulty doubled!",
+      effectDescription: "🎯 Difficulty: 2x",
+      duration: 400,
+      effect: () => {
+        eventMultiplierBackup.value.difficulty = difficultyMultiplier.value;
+        difficultyMultiplier.value = 2;
+      },
+      endEffect: () => {
+        difficultyMultiplier.value = eventMultiplierBackup.value.difficulty;
       },
     },
     {
       id: "maintenance",
       name: "🔧 Emergency Maintenance",
-      description: "Rigs offline for repairs - NO MINING!",
+      description: "Rigs offline for repairs!",
+      effectDescription: "⛏️ Mining: STOPPED",
       duration: 150,
       effect: () => {
         eventMultiplierBackup.value.passive = passiveMultiplier.value;
@@ -359,7 +473,8 @@ function createGameState() {
     {
       id: "gov-crackdown",
       name: "🏛️ Government Crackdown",
-      description: "Mining restricted - 50% production!",
+      description: "Mining restricted by regulators!",
+      effectDescription: "⛏️ Mining: -50%",
       duration: 250,
       effect: () => {
         eventMultiplierBackup.value.global = globalMultiplier.value;
@@ -372,7 +487,8 @@ function createGameState() {
     {
       id: "solar-flare",
       name: "☀️ Solar Flare",
-      description: "Electronics disrupted! 75% less mining!",
+      description: "Electronics disrupted!",
+      effectDescription: "⛏️ Mining: -75% | 👆 Clicks: -50%",
       duration: 100,
       effect: () => {
         eventMultiplierBackup.value.passive = passiveMultiplier.value;
@@ -388,35 +504,22 @@ function createGameState() {
     {
       id: "whale-dump",
       name: "🐋 Whale Dump",
-      description: "Big player sold! Price crashing 70%!",
+      description: "Big player sold! Price crashing!",
+      effectDescription: "📉 Price: -70%",
       duration: 200,
       effect: () => {
-        eventMultiplierBackup.value.btcPrice = btcPrice.value;
-        btcPrice.value *= 0.3;
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        btcPriceMultiplier.value = 0.3;
       },
       endEffect: () => {
-        btcPrice.value = eventMultiplierBackup.value.btcPrice;
-      },
-    },
-    {
-      id: "etf-approval",
-      name: "📈 ETF Approved!",
-      description: "Institutional money flooding in! +200% hash power!",
-      duration: 350,
-      effect: () => {
-        eventMultiplierBackup.value.global = globalMultiplier.value;
-        eventMultiplierBackup.value.btcPrice = btcPrice.value;
-        globalMultiplier.value = 3;
-        btcPrice.value *= 1.5;
-      },
-      endEffect: () => {
-        globalMultiplier.value = eventMultiplierBackup.value.global;
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice;
       },
     },
     {
       id: "network-attack",
       name: "🔓 51% Attack Attempt!",
-      description: "Network under attack! Mining halted for defense!",
+      description: "Network under attack!",
+      effectDescription: "⛏️ Mining: STOPPED | 💀 Lose 5% BTC",
       duration: 120,
       effect: () => {
         eventMultiplierBackup.value.passive = passiveMultiplier.value;
@@ -431,6 +534,196 @@ function createGameState() {
         passiveMultiplier.value = eventMultiplierBackup.value.passive;
         clickMultiplier.value = eventMultiplierBackup.value.click;
         addEvent("Network secured! Mining resumed.");
+      },
+    },
+    {
+      id: "exchange-hack",
+      name: "🏴‍☠️ Exchange Hacked!",
+      description: "Major exchange lost funds!",
+      effectDescription: "📉 Price: -60% | 💀 Lose 3% BTC",
+      duration: 250,
+      effect: () => {
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        btcPriceMultiplier.value = 0.4;
+        const lost = bitcoin.value * 0.03;
+        bitcoin.value -= lost;
+        if (lost > 0) addEvent(`Lost ${formatBTC(lost)} BTC in hack!`);
+      },
+      endEffect: () => {
+        // Permanent 10% loss
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice * 0.9;
+      },
+    },
+    {
+      id: "heat-wave",
+      name: "🌡️ Heat Wave!",
+      description: "Cooling costs surge!",
+      effectDescription: "💡 Electricity: 2x",
+      duration: 300,
+      effect: () => {
+        eventMultiplierBackup.value.electricity = electricityReduction.value;
+        electricityReduction.value = 2;
+      },
+      endEffect: () => {
+        electricityReduction.value = eventMultiplierBackup.value.electricity;
+      },
+    },
+    {
+      id: "chip-shortage",
+      name: "🔌 Chip Shortage!",
+      description: "Hardware failing!",
+      effectDescription: "⛏️ Mining: -40%",
+      duration: 350,
+      effect: () => {
+        eventMultiplierBackup.value.global = globalMultiplier.value;
+        globalMultiplier.value = 0.6;
+      },
+      endEffect: () => {
+        globalMultiplier.value = eventMultiplierBackup.value.global;
+      },
+    },
+    {
+      id: "ransomware",
+      name: "💀 Ransomware Attack!",
+      description: "Systems encrypted!",
+      effectDescription: "💀 Lose 10% BTC | ⛏️ Mining: -80%",
+      duration: 200,
+      effect: () => {
+        const ransom = bitcoin.value * 0.1;
+        bitcoin.value -= ransom;
+        eventMultiplierBackup.value.passive = passiveMultiplier.value;
+        passiveMultiplier.value = 0.2;
+        addEvent(`Paid ${formatBTC(ransom)} BTC ransom!`);
+      },
+      endEffect: () => {
+        passiveMultiplier.value = eventMultiplierBackup.value.passive;
+        addEvent("Systems restored from backup!");
+      },
+    },
+    {
+      id: "power-outage",
+      name: "🔋 Power Outage!",
+      description: "Grid failure!",
+      effectDescription: "⛏️ Mining: STOPPED | 👆 Clicks: STOPPED",
+      duration: 180,
+      effect: () => {
+        eventMultiplierBackup.value.passive = passiveMultiplier.value;
+        eventMultiplierBackup.value.click = clickMultiplier.value;
+        passiveMultiplier.value = 0;
+        clickMultiplier.value = 0;
+      },
+      endEffect: () => {
+        passiveMultiplier.value = eventMultiplierBackup.value.passive;
+        clickMultiplier.value = eventMultiplierBackup.value.click;
+        addEvent("Power restored!");
+      },
+    },
+    {
+      id: "fud-news",
+      name: "📰 FUD Article!",
+      description: '"Bitcoin is Dead" again...',
+      effectDescription: "📉 Price: -30%",
+      duration: 200,
+      effect: () => {
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        btcPriceMultiplier.value = 0.7;
+      },
+      endEffect: () => {
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice;
+        addEvent("Market shrugged off the FUD.");
+      },
+    },
+    {
+      id: "china-ban",
+      name: "🇨🇳 China Bans BTC Again!",
+      description: "For the 100th time...",
+      effectDescription: "📉 Price: -40% (recovers +10%)",
+      duration: 180,
+      effect: () => {
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        btcPriceMultiplier.value = 0.6;
+      },
+      endEffect: () => {
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice * 1.1;
+        addEvent("Market recovered from China ban.");
+      },
+    },
+
+    // === SPECIAL/MIXED EVENTS ===
+    {
+      id: "halving-hype",
+      name: "⏰ Halving Hype!",
+      description: "Pre-halving excitement!",
+      effectDescription: "⛏️ Mining: 2x | 📈 Price: 1.5x",
+      duration: 250,
+      effect: () => {
+        eventMultiplierBackup.value.global = globalMultiplier.value;
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        globalMultiplier.value = 2;
+        btcPriceMultiplier.value = 1.5;
+      },
+      endEffect: () => {
+        globalMultiplier.value = eventMultiplierBackup.value.global;
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice;
+      },
+    },
+    {
+      id: "pizza-day",
+      name: "🍕 Bitcoin Pizza Day!",
+      description: "Celebrating 10,000 BTC for 2 pizzas!",
+      effectDescription: "🎁 +0.001 BTC (instant)",
+      duration: 0,
+      effect: () => {
+        const bonus = 0.001;
+        bitcoin.value += bonus;
+        addEvent("Happy Pizza Day! +0.001 BTC 🍕");
+      },
+    },
+    {
+      id: "laser-eyes",
+      name: "👀 Laser Eyes Trend!",
+      description: "Everyone's bullish!",
+      effectDescription: "⛏️ Mining: 1.5x | 📈 Price: 1.3x",
+      duration: 200,
+      effect: () => {
+        eventMultiplierBackup.value.global = globalMultiplier.value;
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        globalMultiplier.value = 1.5;
+        btcPriceMultiplier.value = 1.3;
+      },
+      endEffect: () => {
+        globalMultiplier.value = eventMultiplierBackup.value.global;
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice;
+      },
+    },
+    {
+      id: "satoshi-moves",
+      name: "👻 Satoshi's Wallet Moves!",
+      description: "PANIC! Is Satoshi selling?!",
+      effectDescription: "📉 Price: -50% (then +20% FOMO)",
+      duration: 100,
+      effect: () => {
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        btcPriceMultiplier.value = 0.5;
+      },
+      endEffect: () => {
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice * 1.2;
+        addEvent("False alarm! Price recovered with FOMO.");
+      },
+    },
+    {
+      id: "meme-coin",
+      name: "🐕 Meme Coin Mania!",
+      description: "Everyone distracted by dog coins...",
+      effectDescription: "📉 Price: -20% (then +10%)",
+      duration: 200,
+      effect: () => {
+        eventMultiplierBackup.value.btcPrice = btcPriceMultiplier.value;
+        btcPriceMultiplier.value = 0.8;
+      },
+      endEffect: () => {
+        btcPriceMultiplier.value = eventMultiplierBackup.value.btcPrice * 1.1;
+        addEvent("Meme coins crashed, BTC pumping!");
       },
     },
   ];
@@ -448,7 +741,14 @@ function createGameState() {
     ) {
       diff *= 0.75;
     }
+    // Apply event multiplier
+    diff *= difficultyMultiplier.value;
     return diff;
+  });
+
+  // Effective BTC price (base price * event multiplier)
+  const effectiveBtcPrice = computed(() => {
+    return btcPrice.value * btcPriceMultiplier.value;
   });
 
   const effectiveBlockReward = computed(() => {
@@ -614,7 +914,7 @@ function createGameState() {
 
   // Net USD profit per second (BTC value mined minus electricity)
   const netProfitUSD = computed(() => {
-    const btcValuePerSecond = miningRate.value * btcPrice.value;
+    const btcValuePerSecond = miningRate.value * effectiveBtcPrice.value;
     return btcValuePerSecond - totalElectricityCost.value;
   });
 
@@ -765,7 +1065,7 @@ function createGameState() {
   // Sell BTC for USD at current market price
   const sellBTC = (amount: number) => {
     if (amount <= 0 || bitcoin.value < amount) return;
-    const usdAmount = amount * btcPrice.value;
+    const usdAmount = amount * effectiveBtcPrice.value;
     bitcoin.value -= amount;
     usdBalance.value += usdAmount;
     stats.value.totalBTCSpent += amount;
@@ -896,26 +1196,31 @@ function createGameState() {
     const playerProgress = totalMinedEver.value;
     const globalProgress = globalBitcoinMined.value / MAX_BITCOIN;
 
-    // Early game: difficulty grows with every tiny bit mined
-    // Each 0.01 BTC mined adds 0.000001 to difficulty
-    let baseDiff = BASE_DIFFICULTY + playerProgress * 0.0001;
+    // Base difficulty scales with player progress
+    // Grows smoothly: 1 → 2 → 5 → 10 etc as you mine more
+    let baseDiff = BASE_DIFFICULTY + playerProgress * 0.001;
 
-    // Cap early game difficulty scaling at 2x
-    baseDiff = Math.min(baseDiff, BASE_DIFFICULTY * 2);
-
-    // Late game: exponential scaling based on global mined
-    if (globalProgress > 0.1) {
-      baseDiff *= Math.pow(1 + globalProgress * 10, 2);
+    // Global progress scaling - smooth exponential curve
+    // Starts immediately but ramps up significantly at higher %
+    if (globalProgress > 0) {
+      // Gentle scaling from 0-10%
+      baseDiff *= 1 + globalProgress * 5;
     }
-
+    if (globalProgress > 0.1) {
+      // Moderate scaling 10-50%
+      baseDiff *= Math.pow(1 + (globalProgress - 0.1) * 3, 2);
+    }
     if (globalProgress > 0.5) {
-      baseDiff *= Math.pow(2, (globalProgress - 0.5) * 20);
+      // Steep scaling 50-90%
+      baseDiff *= Math.pow(2, (globalProgress - 0.5) * 15);
     }
     if (globalProgress > 0.9) {
-      baseDiff *= Math.pow(10, (globalProgress - 0.9) * 100);
+      // Very steep scaling 90-99%
+      baseDiff *= Math.pow(10, (globalProgress - 0.9) * 80);
     }
     if (globalProgress > 0.99) {
-      baseDiff *= 1000000;
+      // Final push - extremely hard
+      baseDiff *= Math.pow(100, (globalProgress - 0.99) * 100);
     }
 
     difficulty.value = baseDiff;
@@ -1344,6 +1649,15 @@ function createGameState() {
     halvingCount.value = 0;
     poolMining.value = false;
 
+    // Reset multipliers
+    globalMultiplier.value = 1;
+    clickMultiplier.value = 1;
+    passiveMultiplier.value = 1;
+    electricityReduction.value = 1;
+    difficultyMultiplier.value = 1;
+    activeEvent.value = null;
+    eventTimer.value = 0;
+
     stats.value = {
       totalClicks: 0,
       totalBTCEarned: 0,
@@ -1467,6 +1781,7 @@ Available cheats:
 
     // Computed
     effectiveDifficulty,
+    effectiveBtcPrice,
     effectiveBlockReward,
     totalHashPower,
     totalElectricityCost,

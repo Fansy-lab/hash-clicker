@@ -48,6 +48,7 @@ export interface RandomEvent {
   id: string;
   name: string;
   description: string;
+  effectDescription: string; // Explains the mechanical effect
   duration: number;
   effect: () => void;
   endEffect?: () => void;
@@ -77,6 +78,17 @@ export interface EventMultiplierBackup {
 export interface AchievementNotification {
   name: string;
   reward: number;
+}
+
+export interface NewsEvent {
+  id: string;
+  year: number;
+  month: number;
+  headline: string;
+  description: string;
+  emoji: string;
+  minedPercent: number; // When this event triggers (% of 21M mined)
+  isFuture?: boolean; // For fictional future events
 }
 
 // ==================== CONSTANTS ====================

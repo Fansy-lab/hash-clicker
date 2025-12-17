@@ -6,7 +6,7 @@ import { formatBTC, formatNumber, formatUSD } from "@/utils/formatters";
 const {
   bitcoin,
   usdBalance,
-  btcPrice,
+  effectiveBtcPrice,
   mineClick,
   sellBTC,
   sellAllBTC,
@@ -157,7 +157,7 @@ const interestRate = computed(() => {
           >{{ formatBTC(bitcoin) }}</span
         >
         <span class="text-sm text-gray-400"
-          >≈ {{ formatUSD(bitcoin * btcPrice) }}</span
+          >≈ {{ formatUSD(bitcoin * effectiveBtcPrice) }}</span
         >
       </div>
 
@@ -194,7 +194,7 @@ const interestRate = computed(() => {
         </div>
         <div class="p-2 bg-black/20">
           <div class="text-[0.65rem] text-gray-500 text-center mb-1.5">
-            Sell BTC @ {{ formatUSD(btcPrice) }}/BTC
+            Sell BTC @ {{ formatUSD(effectiveBtcPrice) }}/BTC
           </div>
           <div class="grid grid-cols-3 gap-1.5">
             <button
@@ -203,7 +203,7 @@ const interestRate = computed(() => {
               @click="sellBTC(0.1)">
               <span class="block text-white">0.1 ₿</span>
               <span class="block text-[0.6rem] text-white/70">{{
-                formatUSD(0.1 * btcPrice)
+                formatUSD(0.1 * effectiveBtcPrice)
               }}</span>
             </button>
             <button
@@ -212,7 +212,7 @@ const interestRate = computed(() => {
               @click="sellBTC(1)">
               <span class="block text-white">1 ₿</span>
               <span class="block text-[0.6rem] text-white/70">{{
-                formatUSD(1 * btcPrice)
+                formatUSD(1 * effectiveBtcPrice)
               }}</span>
             </button>
             <button
@@ -221,7 +221,7 @@ const interestRate = computed(() => {
               @click="sellAllBTC()">
               <span class="block text-white">ALL</span>
               <span class="block text-[0.6rem] text-white/70">{{
-                formatUSD(bitcoin * btcPrice)
+                formatUSD(bitcoin * effectiveBtcPrice)
               }}</span>
             </button>
           </div>
@@ -239,7 +239,7 @@ const interestRate = computed(() => {
 
       <div
         v-if="activeEvent"
-        class="mt-4 py-3 px-4 rounded-xl flex flex-col gap-1 items-center animate-pulse max-w-[280px] text-center bg-gradient-to-br from-purple-600 to-purple-700">
+        class="mt-4 py-3 px-4 rounded-xl flex flex-col gap-1.5 items-center max-w-[300px] text-center bg-gradient-to-br from-purple-600 to-purple-700 animate-pulse">
         <div class="flex gap-2.5 items-center">
           <span class="text-sm font-bold">{{ activeEvent.name }}</span>
           <span
@@ -248,8 +248,11 @@ const interestRate = computed(() => {
             >{{ (eventTimer / 10).toFixed(0) }}s</span
           >
         </div>
-        <div class="text-xs opacity-90 leading-tight">
+        <div class="text-xs opacity-80 leading-tight">
           {{ activeEvent.description }}
+        </div>
+        <div class="text-xs font-semibold py-1 px-2 rounded bg-black/20 mt-0.5">
+          {{ activeEvent.effectDescription }}
         </div>
       </div>
 
@@ -270,10 +273,10 @@ const interestRate = computed(() => {
           >BTC Portfolio Value</span
         >
         <span class="block text-lg font-semibold text-white">{{
-          formatUSD(bitcoin * btcPrice)
+          formatUSD(bitcoin * effectiveBtcPrice)
         }}</span>
         <span class="block text-xs text-gray-400 mt-0.5"
-          >@ {{ formatUSD(btcPrice) }}/BTC</span
+          >@ {{ formatUSD(effectiveBtcPrice) }}/BTC</span
         >
       </div>
       <div class="stat-card text-center">

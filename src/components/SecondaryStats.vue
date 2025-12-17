@@ -4,7 +4,7 @@ import { useGameState } from "@/composables/useGameState";
 import { formatBTC, formatNumber, formatPercent } from "@/utils/formatters";
 
 const {
-  btcPrice,
+  effectiveBtcPrice,
   marketTrend,
   difficulty,
   currentBlockReward,
@@ -34,7 +34,7 @@ const hasMarketIntel = computed(() => {
           >BTC Price</span
         >
         <span class="text-lg sm:text-base font-semibold text-white my-0.5"
-          >${{ formatNumber(btcPrice) }}</span
+          >${{ formatNumber(effectiveBtcPrice) }}</span
         >
         <span
           class="text-xs font-medium"

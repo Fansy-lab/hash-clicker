@@ -14,7 +14,7 @@ const {
   electricityCostPerSecond,
   miningRate,
   netProfitUSD,
-  btcPrice,
+  effectiveBtcPrice,
   marketTrend,
   difficulty,
   currentBlockReward,
@@ -37,7 +37,9 @@ const {
     <div class="stat main-balance">
       <span class="label">₿ Balance</span>
       <span class="value">{{ formatBTC(bitcoin) }} BTC</span>
-      <span class="usd-value">≈ {{ formatUSD(bitcoin * btcPrice) }}</span>
+      <span class="usd-value"
+        >≈ {{ formatUSD(bitcoin * effectiveBtcPrice) }}</span
+      >
     </div>
 
     <!-- USD Balance with Sell Buttons -->
@@ -90,7 +92,7 @@ const {
     <div class="stat-row">
       <div class="stat">
         <span class="label">BTC Price</span>
-        <span class="value">${{ formatNumber(btcPrice) }}</span>
+        <span class="value">${{ formatNumber(effectiveBtcPrice) }}</span>
       </div>
       <div
         class="stat"

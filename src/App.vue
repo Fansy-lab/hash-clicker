@@ -16,6 +16,7 @@ import StatsTab from "@/components/StatsTab.vue";
 import PrestigeTab from "@/components/PrestigeTab.vue";
 import ActivityLog from "@/components/ActivityLog.vue";
 import AchievementNotification from "@/components/AchievementNotification.vue";
+import NewsTicker from "@/components/NewsTicker.vue";
 
 const {
   activeTab,
@@ -164,6 +165,9 @@ onMounted(() => {
         ⛏️ Bitcoin Mining Tycoon
       </h1>
     </header>
+
+    <!-- News Ticker -->
+    <NewsTicker />
 
     <main class="card-game p-6 sm:p-3 shadow-game">
       <HeroSection />
