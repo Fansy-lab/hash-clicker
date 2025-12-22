@@ -368,15 +368,6 @@ export const INITIAL_UPGRADES: Upgrade[] = [
     unlockAt: 5000,
   },
   {
-    id: "whale-alert",
-    name: "Whale Alert System",
-    cost: 175000,
-    effect: "Get warnings before market crashes",
-    purchased: false,
-    category: "special",
-    unlockAt: 10000,
-  },
-  {
     id: "hodl-vault",
     name: "HODL Vault",
     cost: 350000,

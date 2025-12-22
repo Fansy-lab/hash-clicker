@@ -32,6 +32,7 @@ const saveStore = useSaveStore();
 
 const gameReady = ref(false);
 const showSaveModal = ref(false);
+const showContactModal = ref(false);
 const saveFlash = ref(false);
 
 // Debug mode - only on localhost
@@ -92,6 +93,11 @@ const handleDeleteSave = () => {
     saveStore.deleteSave();
     addEvent("🗑️ Save data deleted");
   }
+};
+
+const copyDonateAddress = () => {
+  navigator.clipboard.writeText("37xsZLUmD8PQ9i714mBcFXHRA3J8KFKWBv");
+  addEvent("📋 BTC address copied!");
 };
 
 onMounted(() => {
@@ -163,8 +169,28 @@ onMounted(() => {
   <div class="max-w-[900px] mx-auto p-4 sm:p-2 min-h-screen no-select">
     <header class="text-center py-4 sm:py-2.5 mb-2.5 sm:mb-1">
       <h1 class="text-3xl sm:text-xl font-bold text-gradient-bitcoin">
-        ⛏️ Bitcoin Mining Tycoon
+        ⛏️ Bitcoin Hash Clicker
       </h1>
+      <!-- Donate Button -->
+      <div class="mt-2 flex justify-center gap-3">
+        <a
+          href="bitcoin:37xsZLUmD8PQ9i714mBcFXHRA3J8KFKWBv"
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bitcoin/10 hover:bg-bitcoin/20 border border-bitcoin/30 text-bitcoin text-xs transition-all"
+          @click.prevent="copyDonateAddress">
+          <span>₿</span>
+          <span class="hidden sm:inline">Donate:</span>
+          <span class="font-mono text-[10px] sm:text-xs opacity-80"
+            >37xsZL...KWBv</span
+          >
+          <span class="text-[10px] opacity-60">📋</span>
+        </a>
+        <button
+          @click="showContactModal = true"
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50 text-gray-300 text-xs transition-all">
+          <span>✉️</span>
+          <span>Contact</span>
+        </button>
+      </div>
     </header>
 
     <!-- News Ticker -->
@@ -190,6 +216,62 @@ onMounted(() => {
     <AchievementNotification />
     <LuckyMineAnimation />
   </div>
+
+  <!-- Contact Modal -->
+  <Transition name="modal">
+    <div
+      v-if="showContactModal"
+      class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      @click.self="showContactModal = false">
+      <div
+        class="bg-gradient-to-b from-game-card to-game-cardDark border border-gray-600/50 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-white">✉️ Contact</h2>
+          <button
+            @click="showContactModal = false"
+            class="text-gray-400 hover:text-white text-xl">
+            ✕
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          <!-- Email -->
+          <a
+            href="mailto:ffaannssyy@gmail.com"
+            class="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 transition-all group">
+            <span class="text-2xl">📧</span>
+            <div>
+              <div
+                class="text-white font-medium group-hover:text-bitcoin transition-colors">
+                Email
+              </div>
+              <div class="text-gray-400 text-sm">ffaannssyy@gmail.com</div>
+            </div>
+          </a>
+
+          <!-- Twitter/X -->
+          <a
+            href="https://x.com/GamesFromFansy"
+            target="_blank"
+            rel="noopener"
+            class="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 transition-all group">
+            <span class="text-2xl">🐦</span>
+            <div>
+              <div
+                class="text-white font-medium group-hover:text-blue-400 transition-colors">
+                Twitter / X
+              </div>
+              <div class="text-gray-400 text-sm">@GamesFromFansy</div>
+            </div>
+          </a>
+        </div>
+
+        <p class="text-gray-500 text-xs text-center mt-4">
+          Bug reports, feature ideas, or just say hi! 👋
+        </p>
+      </div>
+    </div>
+  </Transition>
 
   <!-- Debug controls (bottom left) - only on localhost -->
   <div v-if="isLocalhost" class="fixed bottom-4 left-4 z-40">
